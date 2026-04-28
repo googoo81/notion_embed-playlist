@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -85,7 +85,8 @@ async function loadYouTubeIframeApi(): Promise<void> {
     const script = document.createElement("script");
     script.src = "https://www.youtube.com/iframe_api";
     script.async = true;
-    script.onerror = () => reject(new Error("Failed to load YouTube IFrame API"));
+    script.onerror = () =>
+      reject(new Error("Failed to load YouTube IFrame API"));
     window.onYouTubeIframeAPIReady = () => resolve();
     document.head.appendChild(script);
   });
@@ -116,7 +117,8 @@ export default function EmbedPlayer({
   const [duration, setDuration] = useState<number>(0);
   const [current, setCurrent] = useState<number>(0);
 
-  const progress = duration > 0 ? Math.min(1, Math.max(0, current / duration)) : 0;
+  const progress =
+    duration > 0 ? Math.min(1, Math.max(0, current / duration)) : 0;
 
   useEffect(() => {
     let cancelled = false;
@@ -168,12 +170,15 @@ export default function EmbedPlayer({
             }
 
             const d = p.getDuration?.();
-            if (typeof d === "number" && Number.isFinite(d) && d > 0) setDuration(d);
+            if (typeof d === "number" && Number.isFinite(d) && d > 0)
+              setDuration(d);
             const vd = p.getVideoData?.();
             if (vd?.title) setTitle(vd.title);
             if (vd?.author) setAuthor(vd.author);
             if (vd?.video_id) {
-              setThumbnailUrl(`https://i.ytimg.com/vi/${vd.video_id}/hqdefault.jpg`);
+              setThumbnailUrl(
+                `https://i.ytimg.com/vi/${vd.video_id}/hqdefault.jpg`,
+              );
             }
           },
           onStateChange: (e) => {
@@ -188,11 +193,14 @@ export default function EmbedPlayer({
             if (vd?.title) setTitle(vd.title);
             if (vd?.author) setAuthor(vd.author);
             if (vd?.video_id) {
-              setThumbnailUrl(`https://i.ytimg.com/vi/${vd.video_id}/hqdefault.jpg`);
+              setThumbnailUrl(
+                `https://i.ytimg.com/vi/${vd.video_id}/hqdefault.jpg`,
+              );
             }
 
             const d = p?.getDuration?.();
-            if (typeof d === "number" && Number.isFinite(d) && d > 0) setDuration(d);
+            if (typeof d === "number" && Number.isFinite(d) && d > 0)
+              setDuration(d);
           },
         },
       });
@@ -221,7 +229,8 @@ export default function EmbedPlayer({
         const t = p.getCurrentTime?.();
         if (typeof t === "number" && Number.isFinite(t)) setCurrent(t);
         const d = p.getDuration?.();
-        if (typeof d === "number" && Number.isFinite(d) && d > 0) setDuration(d);
+        if (typeof d === "number" && Number.isFinite(d) && d > 0)
+          setDuration(d);
       }
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -279,7 +288,7 @@ export default function EmbedPlayer({
   }
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-[#ffeff5]">
+    <div className="relative min-h-[320px] w-full overflow-hidden bg-transparent">
       {/* Hidden YouTube player host */}
       <div id={hostId} className="h-0 w-0 overflow-hidden" />
 
@@ -288,25 +297,25 @@ export default function EmbedPlayer({
         className="pointer-events-none absolute -inset-8 bg-cover bg-center blur-2xl"
         style={{
           backgroundImage: thumbnailUrl ? `url("${thumbnailUrl}")` : undefined,
-          backgroundColor: thumbnailUrl ? undefined : "#ffeff5",
+          backgroundColor: "transparent",
         }}
       />
-      <div className="pointer-events-none absolute inset-0 bg-white/50" />
+      <div className="pointer-events-none absolute inset-0 bg-transparent" />
 
       {/* Player */}
-      <div className="absolute left-0 right-0 top-1/2 mx-auto w-[760px] max-w-[92vw] -translate-y-1/2">
+      <div className="relative mx-auto w-full max-w-[760px] px-3 py-6 sm:px-0">
         <div className="relative">
           {/* Top info bar */}
-          <div className="relative z-[1] mx-auto w-[95%] rounded-[22px] bg-[#f7f2e7] px-6 py-6 pl-[248px] shadow-[0_24px_70px_rgba(0,0,0,0.20)]">
-            <div className="text-[34px] font-semibold tracking-tight text-[#2a2a2a]">
+          <div className="relative z-[1] mx-auto w-[95%] rounded-[22px] bg-[#f7f2e7] px-4 py-4 pl-[160px] shadow-[0_24px_70px_rgba(0,0,0,0.20)] sm:px-6 sm:py-6 sm:pl-[248px]">
+            <div className="text-[26px] font-semibold tracking-tight text-[#2a2a2a] sm:text-[34px]">
               {author || "YouTube"}
             </div>
-            <div className="mt-1 text-[18px] font-medium text-[#b7b7b7]">
+            <div className="mt-1 text-[14px] font-medium text-[#b7b7b7] sm:text-[18px]">
               {title}
             </div>
 
             {/* time + thin progress */}
-            <div className="mt-4 flex items-center justify-between text-[14px] text-[#d4b35b]">
+            <div className="mt-3 flex items-center justify-between text-[12px] text-[#d4b35b] sm:mt-4 sm:text-[14px]">
               <span className="font-mono">{formatTime(current)}</span>
               <span className="font-mono">{formatTime(duration)}</span>
             </div>
@@ -319,8 +328,8 @@ export default function EmbedPlayer({
           </div>
 
           {/* Disc artwork (outside top box, above all) */}
-          <div className="absolute left-10 top-1/2 z-[3] -translate-y-1/2">
-            <div className="relative h-[220px] w-[220px] rounded-full bg-white shadow-[0_0_0_4px_rgba(255,255,255,0.85)]">
+          <div className="absolute left-4 top-1/2 z-[3] -translate-y-1/2 sm:left-10">
+            <div className="relative h-[140px] w-[140px] rounded-full bg-white shadow-[0_0_0_4px_rgba(255,255,255,0.85)] sm:h-[220px] sm:w-[220px]">
               <div className="absolute inset-[4px] overflow-hidden rounded-full bg-white">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -336,31 +345,70 @@ export default function EmbedPlayer({
                   ].join(" ")}
                 />
               </div>
-              <div className="absolute left-1/2 top-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/90 shadow-sm" />
+              <div className="absolute left-1/2 top-1/2 h-7 w-7 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/90 shadow-sm sm:h-9 sm:w-9" />
             </div>
           </div>
 
           {/* Big control bar */}
-          <div className="relative z-[2] mt-[-18px] rounded-[26px] bg-white/85 px-8 py-8 backdrop-blur">
-            <div className="mt-2 flex items-center justify-between pl-[248px] pr-10 text-black/30">
-              <button type="button" onClick={prev} aria-label="이전" className="p-2">
-                <svg width="56" height="56" viewBox="0 0 24 24" fill="currentColor">
+          <div className="relative z-[2] mt-[-12px] rounded-[26px] bg-white/85 px-4 py-5 backdrop-blur sm:mt-[-18px] sm:px-8 sm:py-8">
+            <div className="mt-1 flex items-center justify-between pl-[150px] pr-2 text-black/30 sm:mt-2 sm:pl-[248px] sm:pr-10">
+              <button
+                type="button"
+                onClick={prev}
+                aria-label="이전"
+                className="p-2"
+              >
+                <svg
+                  width="42"
+                  height="42"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="sm:h-14 sm:w-14"
+                >
                   <path d="M6 6h2v12H6V6zm3.5 6 10.5 6V6L9.5 12z" />
                 </svg>
               </button>
-              <button type="button" onClick={toggle} aria-label="재생/일시정지" className="p-2">
+              <button
+                type="button"
+                onClick={toggle}
+                aria-label="재생/일시정지"
+                className="p-2"
+              >
                 {isPlaying ? (
-                  <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor">
+                  <svg
+                    width="48"
+                    height="48"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="sm:h-16 sm:w-16"
+                  >
                     <path d="M6 5h4v14H6V5zm8 0h4v14h-4V5z" />
                   </svg>
                 ) : (
-                  <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor">
+                  <svg
+                    width="48"
+                    height="48"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="sm:h-16 sm:w-16"
+                  >
                     <path d="M8 5v14l11-7L8 5z" />
                   </svg>
                 )}
               </button>
-              <button type="button" onClick={next} aria-label="다음" className="p-2">
-                <svg width="56" height="56" viewBox="0 0 24 24" fill="currentColor">
+              <button
+                type="button"
+                onClick={next}
+                aria-label="다음"
+                className="p-2"
+              >
+                <svg
+                  width="42"
+                  height="42"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="sm:h-14 sm:w-14"
+                >
                   <path d="M16 6h2v12h-2V6zM4 18V6l10.5 6L4 18z" />
                 </svg>
               </button>
@@ -369,13 +417,13 @@ export default function EmbedPlayer({
             <button
               type="button"
               onClick={() => setShowVolume((prev) => !prev)}
-              className="absolute bottom-4 right-5 text-xs font-medium text-black/35"
+              className="absolute bottom-3 right-3 text-xs font-medium text-black/35 sm:bottom-4 sm:right-5"
               title="노션 자동재생 성공률을 위해 기본 음소거"
             >
               {isMuted ? "Muted" : "Sound"} / Vol
             </button>
             {showVolume ? (
-              <div className="absolute bottom-10 right-5 w-36 rounded-xl bg-white/90 px-3 py-2 shadow-sm">
+              <div className="absolute bottom-8 right-3 w-32 rounded-xl bg-white/90 px-3 py-2 shadow-sm sm:bottom-10 sm:right-5 sm:w-36">
                 <input
                   type="range"
                   min={0}
@@ -399,12 +447,7 @@ export default function EmbedPlayer({
             ) : null}
           </div>
         </div>
-
-        <div className="mt-4 text-center text-xs text-black/35">
-          노션 임베드용. 실제 재생은 YouTube 플레이어로 수행됨.
-        </div>
       </div>
     </div>
   );
 }
-
