@@ -238,7 +238,7 @@ export default function HomePage() {
               readOnly
               rows={7}
               className="mt-2 w-full resize-none rounded-xl border border-zinc-200 bg-white p-3 text-xs font-mono outline-none dark:border-zinc-800 dark:bg-black"
-              placeholder="플레이리스트를 입력하면 여기 코드가 생성돼."
+              placeholder="플레이리스트를 입력하면 여기 코드가 생성됩니다."
             />
           </div>
 
@@ -259,7 +259,7 @@ export default function HomePage() {
               readOnly
               rows={6}
               className="mt-2 w-full resize-none rounded-xl border border-zinc-200 bg-white p-3 text-xs font-mono outline-none dark:border-zinc-800 dark:bg-black"
-              placeholder="유튜브 링크를 입력하면 기본 iframe 코드가 생성돼."
+              placeholder="유튜브 링크를 입력하면 기본 iframe 코드가 생성됩니다."
             />
           </div>
         </section>
