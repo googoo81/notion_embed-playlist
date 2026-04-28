@@ -25,19 +25,27 @@ export default function HomePage() {
   const [origin] = useState<string>(() =>
     typeof window === "undefined" ? "" : window.location.origin,
   );
+  const [baseUrl, setBaseUrl] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    const o = window.location.origin;
+    if (o.includes("localhost") || o.includes("127.0.0.1")) {
+      return "https://notion-embed-playlist.vercel.app";
+    }
+    return o;
+  });
   const [input, setInput] = useState<string>("");
   const [height, setHeight] = useState<number>(480);
   const playlistId = useMemo(() => extractYouTubePlaylistId(input), [input]);
   const videoId = useMemo(() => extractYouTubeVideoId(input), [input]);
 
   const embedUrl = useMemo(() => {
-    if (!origin) return "";
+    if (!baseUrl) return "";
     if (!playlistId && !videoId) return "";
-    return buildEmbedUrl(origin, {
+    return buildEmbedUrl(baseUrl, {
       playlistId: playlistId ?? undefined,
       videoId: videoId ?? undefined,
     });
-  }, [origin, playlistId, videoId]);
+  }, [baseUrl, playlistId, videoId]);
 
   const youtubeOfficialEmbedUrl = useMemo(() => {
     if (playlistId) {
@@ -90,7 +98,33 @@ export default function HomePage() {
         </header>
 
         <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-          <label className="block text-sm font-medium">유튜브 링크 (플레이리스트/영상)</label>
+          <div className="mb-4 rounded-xl bg-zinc-50 p-3 text-xs text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">
+            <div className="font-medium text-zinc-900 dark:text-zinc-50">노션에서 중요한 점</div>
+            <div className="mt-1">
+              노션은 <span className="font-mono">localhost</span> 같은 로컬 주소를 불러올 수 없어.
+              반드시 <span className="font-medium">공개 HTTPS URL</span>을 사용해야 해.
+            </div>
+          </div>
+
+          <label className="block text-sm font-medium">베이스 URL (노션에서 접근 가능한 주소)</label>
+          <div className="mt-2 flex gap-2">
+            <input
+              value={baseUrl}
+              onChange={(e) => setBaseUrl(e.target.value)}
+              placeholder="예: https://notion-embed-playlist.vercel.app"
+              className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none ring-0 focus:border-zinc-400 dark:border-zinc-800 dark:bg-black dark:focus:border-zinc-600"
+            />
+            <button
+              type="button"
+              onClick={() => setBaseUrl(origin)}
+              className="shrink-0 rounded-xl border border-zinc-200 bg-white px-3 py-3 text-sm font-medium text-zinc-900 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-black dark:text-zinc-50 dark:hover:bg-zinc-900"
+              title="현재 사이트 주소로 설정"
+            >
+              현재
+            </button>
+          </div>
+
+          <label className="mt-4 block text-sm font-medium">유튜브 링크 (플레이리스트/영상)</label>
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
