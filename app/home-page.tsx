@@ -1,17 +1,24 @@
-'use client';
+"use client";
 
 import { useMemo, useState } from "react";
 import { extractYouTubePlaylistId, extractYouTubeVideoId } from "./lib/youtube";
 
 function buildEmbedUrl(
   origin: string,
-  params: { playlistId?: string; videoId?: string; autoplay?: boolean; muted?: boolean },
+  params: {
+    playlistId?: string;
+    videoId?: string;
+    autoplay?: boolean;
+    muted?: boolean;
+  },
 ) {
   const url = new URL("/embed", origin);
   if (params.playlistId) url.searchParams.set("list", params.playlistId);
   if (params.videoId) url.searchParams.set("v", params.videoId);
-  if (params.autoplay != null) url.searchParams.set("autoplay", params.autoplay ? "1" : "0");
-  if (params.muted != null) url.searchParams.set("muted", params.muted ? "1" : "0");
+  if (params.autoplay != null)
+    url.searchParams.set("autoplay", params.autoplay ? "1" : "0");
+  if (params.muted != null)
+    url.searchParams.set("muted", params.muted ? "1" : "0");
   // Bump when UI changes to avoid iframe cache showing stale layout
   url.searchParams.set("ui", "v2");
   return url.toString();
@@ -68,7 +75,10 @@ export default function HomePage() {
 
   const snippet = useMemo(() => {
     if (!embedUrl) return "";
-    return buildIframeSnippet(embedUrl).replace('height="480"', `height="${height}"`);
+    return buildIframeSnippet(embedUrl).replace(
+      'height="480"',
+      `height="${height}"`,
+    );
   }, [embedUrl, height]);
 
   const youtubeOfficialSnippet = useMemo(() => {
@@ -101,21 +111,26 @@ export default function HomePage() {
           </h1>
           <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
             유튜브 플레이리스트 URL 또는 ID를 넣으면, 노션에 붙여넣을{" "}
-            <span className="font-medium text-zinc-900 dark:text-zinc-50">iframe 코드</span>를
-            만들어줘.
+            <span className="font-medium text-zinc-900 dark:text-zinc-50">
+              iframe 코드
+            </span>
+            를 만들어줘.
           </p>
         </header>
 
         <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
           <div className="mb-4 rounded-xl bg-zinc-50 p-3 text-xs text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">
-            <div className="font-medium text-zinc-900 dark:text-zinc-50">노션에서 중요한 점</div>
+            <div className="font-medium text-zinc-900 dark:text-zinc-50">
+              노션에 임베드 추가하기
+            </div>
             <div className="mt-1">
-              노션은 <span className="font-mono">localhost</span> 같은 로컬 주소를 불러올 수 없어.
-              반드시 <span className="font-medium">공개 HTTPS URL</span>을 사용해야 해.
+              노션에서 [/embed]를 입력한 뒤 생성된 커스텀 플레이어 임베드 URL을 붙혀넣기 해주세요.
             </div>
           </div>
 
-          <label className="block text-sm font-medium">베이스 URL (노션에서 접근 가능한 주소)</label>
+          <label className="block text-sm font-medium">
+            베이스 URL (노션에서 접근 가능한 주소)
+          </label>
           <div className="mt-2 flex gap-2">
             <input
               value={baseUrl}
@@ -123,28 +138,11 @@ export default function HomePage() {
               placeholder="예: https://notion-embed-playlist.vercel.app"
               className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none ring-0 focus:border-zinc-400 dark:border-zinc-800 dark:bg-black dark:focus:border-zinc-600"
             />
-            <button
-              type="button"
-              onClick={() => setBaseUrl(window.location.origin)}
-              className="shrink-0 rounded-xl border border-zinc-200 bg-white px-3 py-3 text-sm font-medium text-zinc-900 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-black dark:text-zinc-50 dark:hover:bg-zinc-900"
-              title="현재 사이트 주소로 설정"
-            >
-              현재
-            </button>
-            <button
-              type="button"
-              onClick={() => setBaseUrl("https://notion-embed-playlist.vercel.app")}
-              className="shrink-0 rounded-xl border border-zinc-200 bg-white px-3 py-3 text-sm font-medium text-zinc-900 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-black dark:text-zinc-50 dark:hover:bg-zinc-900"
-              title="배포 주소로 설정"
-            >
-              배포
-            </button>
           </div>
-          <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
-            로컬 미리보기를 보려면 `현재` 버튼, 노션에 붙일 링크는 `배포` 버튼으로 맞춰줘.
-          </p>
 
-          <label className="mt-4 block text-sm font-medium">유튜브 링크 (플레이리스트/영상)</label>
+          <label className="mt-4 block text-sm font-medium">
+            유튜브 링크 (플레이리스트/영상)
+          </label>
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -154,7 +152,7 @@ export default function HomePage() {
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <label className="flex items-center justify-between rounded-xl bg-zinc-50 px-4 py-3 text-sm dark:bg-zinc-900">
-              <span className="font-medium">자동재생(시도)</span>
+              <span className="font-medium">자동재생 기능</span>
               <input
                 type="checkbox"
                 checked={autoplay}
@@ -163,7 +161,7 @@ export default function HomePage() {
               />
             </label>
             <label className="flex items-center justify-between rounded-xl bg-zinc-50 px-4 py-3 text-sm dark:bg-zinc-900">
-              <span className="font-medium">음소거(성공률↑)</span>
+              <span className="font-medium">디폴트 음소거 설정</span>
               <input
                 type="checkbox"
                 checked={muted}
@@ -175,14 +173,18 @@ export default function HomePage() {
 
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl bg-zinc-50 p-3 text-sm dark:bg-zinc-900">
-              <div className="text-xs text-zinc-500 dark:text-zinc-400">감지된 playlist id</div>
+              <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                감지된 playlist id
+              </div>
               <div className="mt-1 break-all font-mono">
                 {playlistId ?? <span className="text-zinc-400">-</span>}
               </div>
             </div>
 
             <div className="rounded-xl bg-zinc-50 p-3 text-sm dark:bg-zinc-900">
-              <div className="text-xs text-zinc-500 dark:text-zinc-400">감지된 video id</div>
+              <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                감지된 video id
+              </div>
               <div className="mt-1 break-all font-mono">
                 {videoId ?? <span className="text-zinc-400">-</span>}
               </div>
@@ -190,7 +192,9 @@ export default function HomePage() {
 
             <div className="rounded-xl bg-zinc-50 p-3 text-sm dark:bg-zinc-900">
               <div className="flex items-center justify-between">
-                <div className="text-xs text-zinc-500 dark:text-zinc-400">높이(px)</div>
+                <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                  높이(px)
+                </div>
                 <input
                   type="number"
                   min={200}
@@ -207,7 +211,9 @@ export default function HomePage() {
           </div>
 
           <div className="mt-4">
-            <div className="text-sm font-medium">우리 임베드 URL (커스텀 플레이어)</div>
+            <div className="text-sm font-medium">
+              커스텀 플레이어 임베드 URL
+            </div>
             <div className="mt-2 rounded-xl border border-zinc-200 bg-white p-3 text-xs font-mono text-zinc-700 dark:border-zinc-800 dark:bg-black dark:text-zinc-200">
               {embedUrl || <span className="text-zinc-400">-</span>}
             </div>
@@ -215,7 +221,9 @@ export default function HomePage() {
 
           <div className="mt-4">
             <div className="flex items-center justify-between">
-              <div className="text-sm font-medium">노션에 붙여넣을 iframe 코드 (커스텀)</div>
+              <div className="text-sm font-medium">
+                커스텀 플레이어 iframe 코드
+              </div>
               <button
                 type="button"
                 onClick={onCopy}
@@ -236,7 +244,7 @@ export default function HomePage() {
 
           <div className="mt-4">
             <div className="flex items-center justify-between">
-              <div className="text-sm font-medium">노션에 붙여넣을 iframe 코드 (유튜브 기본)</div>
+              <div className="text-sm font-medium">유튜브 iframe 코드</div>
               <button
                 type="button"
                 onClick={onCopyOfficial}
@@ -258,7 +266,9 @@ export default function HomePage() {
 
         {embedUrl ? (
           <section className="mt-6">
-            <div className="mb-2 text-sm font-medium">미리보기 (커스텀 플레이어)</div>
+            <div className="mb-2 text-sm font-medium">
+              미리보기 (커스텀 플레이어)
+            </div>
             <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-black">
               <iframe
                 key={embedUrl}
@@ -273,7 +283,9 @@ export default function HomePage() {
 
         {youtubeOfficialEmbedUrl ? (
           <section className="mt-6">
-            <div className="mb-2 text-sm font-medium">미리보기 (유튜브 기본 iframe)</div>
+            <div className="mb-2 text-sm font-medium">
+              미리보기 (유튜브 기본 iframe)
+            </div>
             <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-black">
               <iframe
                 key={youtubeOfficialEmbedUrl}
@@ -290,4 +302,3 @@ export default function HomePage() {
     </div>
   );
 }
-
