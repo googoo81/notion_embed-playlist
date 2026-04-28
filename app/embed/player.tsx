@@ -30,12 +30,14 @@ type YouTubePlayer = {
   getDuration?: () => number;
   getPlayerState?: () => YouTubePlayerState;
   getVideoData?: () => YouTubeVideoData;
+  getVolume?: () => number;
   isMuted?: () => boolean;
   mute?: () => void;
   nextVideo?: () => void;
   pauseVideo?: () => void;
   playVideo?: () => void;
   previousVideo?: () => void;
+  setVolume?: (volume: number) => void;
   seekTo?: (seconds: number, allowSeekAhead: boolean) => void;
   unMute?: () => void;
 };
@@ -95,6 +97,7 @@ export default function EmbedPlayer({
   autoplay = true,
   muted = false,
 }: Props) {
+  const DEFAULT_VOLUME = 10;
   const key = playlistId ?? videoId ?? "unknown";
   const hostId = useMemo(
     () => `yt-player-${key.replace(/[^a-zA-Z0-9_-]/g, "")}`,
@@ -108,6 +111,8 @@ export default function EmbedPlayer({
   const [thumbnailUrl, setThumbnailUrl] = useState<string>("");
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(true);
+  const [volume, setVolume] = useState<number>(DEFAULT_VOLUME);
+  const [showVolume, setShowVolume] = useState<boolean>(false);
   const [duration, setDuration] = useState<number>(0);
   const [current, setCurrent] = useState<number>(0);
 
@@ -147,6 +152,8 @@ export default function EmbedPlayer({
           onReady: () => {
             const p = playerRef.current;
             if (!p) return;
+            p.setVolume?.(DEFAULT_VOLUME);
+            setVolume(DEFAULT_VOLUME);
 
             if (shouldMuted) {
               p.mute?.();
@@ -243,6 +250,21 @@ export default function EmbedPlayer({
     } else {
       p.mute?.();
       setIsMuted(true);
+    }
+  }
+
+  function applyVolume(nextVolume: number) {
+    const safe = Math.max(0, Math.min(100, nextVolume));
+    setVolume(safe);
+    const p = playerRef.current;
+    if (!p) return;
+    p.setVolume?.(safe);
+    if (safe === 0) {
+      p.mute?.();
+      setIsMuted(true);
+    } else if (p.isMuted?.()) {
+      p.unMute?.();
+      setIsMuted(false);
     }
   }
 
@@ -346,12 +368,35 @@ export default function EmbedPlayer({
 
             <button
               type="button"
-              onClick={toggleMute}
+              onClick={() => setShowVolume((prev) => !prev)}
               className="absolute bottom-4 right-5 text-xs font-medium text-black/35"
               title="노션 자동재생 성공률을 위해 기본 음소거"
             >
-              {isMuted ? "Muted" : "Sound"}
+              {isMuted ? "Muted" : "Sound"} / Vol
             </button>
+            {showVolume ? (
+              <div className="absolute bottom-10 right-5 w-36 rounded-xl bg-white/90 px-3 py-2 shadow-sm">
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={volume}
+                  onChange={(e) => applyVolume(Number(e.target.value))}
+                  className="w-full accent-[#f2b84b]"
+                />
+                <div className="mt-1 flex items-center justify-between text-[11px] text-black/45">
+                  <span>{volume}%</span>
+                  <button
+                    type="button"
+                    onClick={toggleMute}
+                    className="rounded-md px-1 py-0.5 hover:bg-black/5"
+                  >
+                    {isMuted ? "Unmute" : "Mute"}
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
 
