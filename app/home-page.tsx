@@ -114,7 +114,7 @@ export default function HomePage() {
             <span className="font-medium text-zinc-900 dark:text-zinc-50">
               iframe 코드
             </span>
-            를 만들어줘.
+            를 만들어주세요.
           </p>
         </header>
 
