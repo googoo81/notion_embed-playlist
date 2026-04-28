@@ -3,10 +3,17 @@
 import { useMemo, useState } from "react";
 import { extractYouTubePlaylistId, extractYouTubeVideoId } from "./lib/youtube";
 
-function buildEmbedUrl(origin: string, params: { playlistId?: string; videoId?: string }) {
+function buildEmbedUrl(
+  origin: string,
+  params: { playlistId?: string; videoId?: string; autoplay?: boolean; muted?: boolean },
+) {
   const url = new URL("/embed", origin);
   if (params.playlistId) url.searchParams.set("list", params.playlistId);
   if (params.videoId) url.searchParams.set("v", params.videoId);
+  if (params.autoplay != null) url.searchParams.set("autoplay", params.autoplay ? "1" : "0");
+  if (params.muted != null) url.searchParams.set("muted", params.muted ? "1" : "0");
+  // Bump when UI changes to avoid iframe cache showing stale layout
+  url.searchParams.set("ui", "v2");
   return url.toString();
 }
 
@@ -22,19 +29,15 @@ function buildIframeSnippet(embedUrl: string) {
 }
 
 export default function HomePage() {
-  const [origin] = useState<string>(() =>
-    typeof window === "undefined" ? "" : window.location.origin,
-  );
-  const [baseUrl, setBaseUrl] = useState<string>(() => {
-    if (typeof window === "undefined") return "";
-    const o = window.location.origin;
-    if (o.includes("localhost") || o.includes("127.0.0.1")) {
-      return "https://notion-embed-playlist.vercel.app";
-    }
-    return o;
-  });
+  const defaultBaseUrl =
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:3000"
+      : "https://notion-embed-playlist.vercel.app";
+  const [baseUrl, setBaseUrl] = useState<string>(defaultBaseUrl);
   const [input, setInput] = useState<string>("");
   const [height, setHeight] = useState<number>(480);
+  const [autoplay, setAutoplay] = useState<boolean>(true);
+  const [muted, setMuted] = useState<boolean>(false);
   const playlistId = useMemo(() => extractYouTubePlaylistId(input), [input]);
   const videoId = useMemo(() => extractYouTubeVideoId(input), [input]);
 
@@ -44,18 +47,24 @@ export default function HomePage() {
     return buildEmbedUrl(baseUrl, {
       playlistId: playlistId ?? undefined,
       videoId: videoId ?? undefined,
+      autoplay,
+      muted,
     });
-  }, [baseUrl, playlistId, videoId]);
+  }, [autoplay, baseUrl, muted, playlistId, videoId]);
 
   const youtubeOfficialEmbedUrl = useMemo(() => {
     if (playlistId) {
-      return `https://www.youtube.com/embed/videoseries?list=${encodeURIComponent(playlistId)}&rel=0&modestbranding=1`;
+      return `https://www.youtube.com/embed/videoseries?list=${encodeURIComponent(playlistId)}&rel=0&modestbranding=1&autoplay=${
+        autoplay ? "1" : "0"
+      }&mute=1`;
     }
     if (videoId) {
-      return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?rel=0&modestbranding=1`;
+      return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?rel=0&modestbranding=1&autoplay=${
+        autoplay ? "1" : "0"
+      }&mute=1`;
     }
     return "";
-  }, [playlistId, videoId]);
+  }, [autoplay, playlistId, videoId]);
 
   const snippet = useMemo(() => {
     if (!embedUrl) return "";
@@ -116,13 +125,24 @@ export default function HomePage() {
             />
             <button
               type="button"
-              onClick={() => setBaseUrl(origin)}
+              onClick={() => setBaseUrl(window.location.origin)}
               className="shrink-0 rounded-xl border border-zinc-200 bg-white px-3 py-3 text-sm font-medium text-zinc-900 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-black dark:text-zinc-50 dark:hover:bg-zinc-900"
               title="현재 사이트 주소로 설정"
             >
               현재
             </button>
+            <button
+              type="button"
+              onClick={() => setBaseUrl("https://notion-embed-playlist.vercel.app")}
+              className="shrink-0 rounded-xl border border-zinc-200 bg-white px-3 py-3 text-sm font-medium text-zinc-900 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-black dark:text-zinc-50 dark:hover:bg-zinc-900"
+              title="배포 주소로 설정"
+            >
+              배포
+            </button>
           </div>
+          <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
+            로컬 미리보기를 보려면 `현재` 버튼, 노션에 붙일 링크는 `배포` 버튼으로 맞춰줘.
+          </p>
 
           <label className="mt-4 block text-sm font-medium">유튜브 링크 (플레이리스트/영상)</label>
           <input
@@ -131,6 +151,27 @@ export default function HomePage() {
             placeholder="예: https://www.youtube.com/playlist?list=PLxxxx / https://www.youtube.com/watch?v=xxxx / PLxxxx"
             className="mt-2 w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none ring-0 focus:border-zinc-400 dark:border-zinc-800 dark:bg-black dark:focus:border-zinc-600"
           />
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <label className="flex items-center justify-between rounded-xl bg-zinc-50 px-4 py-3 text-sm dark:bg-zinc-900">
+              <span className="font-medium">자동재생(시도)</span>
+              <input
+                type="checkbox"
+                checked={autoplay}
+                onChange={(e) => setAutoplay(e.target.checked)}
+                className="h-4 w-4 accent-amber-400"
+              />
+            </label>
+            <label className="flex items-center justify-between rounded-xl bg-zinc-50 px-4 py-3 text-sm dark:bg-zinc-900">
+              <span className="font-medium">음소거(성공률↑)</span>
+              <input
+                type="checkbox"
+                checked={muted}
+                onChange={(e) => setMuted(e.target.checked)}
+                className="h-4 w-4 accent-amber-400"
+              />
+            </label>
+          </div>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl bg-zinc-50 p-3 text-sm dark:bg-zinc-900">

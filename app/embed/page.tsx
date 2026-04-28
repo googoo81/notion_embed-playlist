@@ -26,6 +26,14 @@ function getParam(searchParams: Props["searchParams"], key: string) {
   return Array.isArray(v) ? v[0] : v;
 }
 
+function parseBool(v: string | undefined, defaultValue: boolean) {
+  if (v == null) return defaultValue;
+  const s = String(v).trim().toLowerCase();
+  if (["1", "true", "yes", "y", "on"].includes(s)) return true;
+  if (["0", "false", "no", "n", "off"].includes(s)) return false;
+  return defaultValue;
+}
+
 async function resolveSearchParams(
   searchParams: Props["searchParams"],
 ): Promise<Record<string, string | string[] | undefined> | undefined> {
@@ -40,6 +48,8 @@ export default async function EmbedPage({ searchParams }: Props) {
   const sp = await resolveSearchParams(searchParams);
   const listInput = getParam(sp, "list") ?? "";
   const vInput = getParam(sp, "v") ?? "";
+  const autoplay = parseBool(getParam(sp, "autoplay"), true);
+  const muted = parseBool(getParam(sp, "muted"), false);
 
   const playlistId = extractYouTubePlaylistId(listInput);
   const videoId = extractYouTubeVideoId(vInput);
@@ -59,6 +69,13 @@ export default async function EmbedPage({ searchParams }: Props) {
     );
   }
 
-  return <EmbedPlayer playlistId={playlistId ?? undefined} videoId={videoId ?? undefined} />;
+  return (
+    <EmbedPlayer
+      playlistId={playlistId ?? undefined}
+      videoId={videoId ?? undefined}
+      autoplay={autoplay}
+      muted={muted}
+    />
+  );
 }
 

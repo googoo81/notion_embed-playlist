@@ -12,6 +12,8 @@ declare global {
 type Props = {
   playlistId?: string;
   videoId?: string;
+  autoplay?: boolean;
+  muted?: boolean;
 };
 
 type YouTubePlayerState = -1 | 0 | 1 | 2 | 3 | 5;
@@ -28,11 +30,14 @@ type YouTubePlayer = {
   getDuration?: () => number;
   getPlayerState?: () => YouTubePlayerState;
   getVideoData?: () => YouTubeVideoData;
+  isMuted?: () => boolean;
+  mute?: () => void;
   nextVideo?: () => void;
   pauseVideo?: () => void;
   playVideo?: () => void;
   previousVideo?: () => void;
   seekTo?: (seconds: number, allowSeekAhead: boolean) => void;
+  unMute?: () => void;
 };
 
 type YouTubeIframeApi = {
@@ -84,7 +89,12 @@ async function loadYouTubeIframeApi(): Promise<void> {
   });
 }
 
-export default function EmbedPlayer({ playlistId, videoId }: Props) {
+export default function EmbedPlayer({
+  playlistId,
+  videoId,
+  autoplay = true,
+  muted = false,
+}: Props) {
   const key = playlistId ?? videoId ?? "unknown";
   const hostId = useMemo(
     () => `yt-player-${key.replace(/[^a-zA-Z0-9_-]/g, "")}`,
@@ -97,9 +107,9 @@ export default function EmbedPlayer({ playlistId, videoId }: Props) {
   const [author, setAuthor] = useState<string>("");
   const [thumbnailUrl, setThumbnailUrl] = useState<string>("");
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [isMuted, setIsMuted] = useState<boolean>(true);
   const [duration, setDuration] = useState<number>(0);
   const [current, setCurrent] = useState<number>(0);
-  const [seeking, setSeeking] = useState<boolean>(false);
 
   const progress = duration > 0 ? Math.min(1, Math.max(0, current / duration)) : 0;
 
@@ -113,12 +123,15 @@ export default function EmbedPlayer({ playlistId, videoId }: Props) {
       const YT = window.YT;
       if (!YT?.Player) return;
 
+      const shouldAutoplay = autoplay ?? true;
+      const shouldMuted = muted ?? true;
+
       playerRef.current = new YT.Player(hostId, {
         videoId: videoId || undefined,
         height: "0",
         width: "0",
         playerVars: {
-          autoplay: 0,
+          autoplay: shouldAutoplay ? 1 : 0,
           controls: 0,
           modestbranding: 1,
           rel: 0,
@@ -134,6 +147,19 @@ export default function EmbedPlayer({ playlistId, videoId }: Props) {
           onReady: () => {
             const p = playerRef.current;
             if (!p) return;
+
+            if (shouldMuted) {
+              p.mute?.();
+              setIsMuted(true);
+            } else {
+              setIsMuted(Boolean(p.isMuted?.()));
+            }
+
+            // Highest success rate: try autoplay while muted.
+            if (shouldAutoplay) {
+              setTimeout(() => p.playVideo?.(), 0);
+            }
+
             const d = p.getDuration?.();
             if (typeof d === "number" && Number.isFinite(d) && d > 0) setDuration(d);
             const vd = p.getVideoData?.();
@@ -150,6 +176,7 @@ export default function EmbedPlayer({ playlistId, videoId }: Props) {
             setIsPlaying(state === 1);
 
             const p = playerRef.current;
+            if (p?.isMuted) setIsMuted(Boolean(p.isMuted()));
             const vd = p?.getVideoData?.();
             if (vd?.title) setTitle(vd.title);
             if (vd?.author) setAuthor(vd.author);
@@ -178,12 +205,12 @@ export default function EmbedPlayer({ playlistId, videoId }: Props) {
       }
       playerRef.current = null;
     };
-  }, [hostId, playlistId, videoId]);
+  }, [autoplay, hostId, muted, playlistId, videoId]);
 
   useEffect(() => {
     const tick = () => {
       const p = playerRef.current;
-      if (p && !seeking) {
+      if (p) {
         const t = p.getCurrentTime?.();
         if (typeof t === "number" && Number.isFinite(t)) setCurrent(t);
         const d = p.getDuration?.();
@@ -197,7 +224,7 @@ export default function EmbedPlayer({ playlistId, videoId }: Props) {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     };
-  }, [seeking]);
+  }, []);
 
   function toggle() {
     const p = playerRef.current;
@@ -205,6 +232,18 @@ export default function EmbedPlayer({ playlistId, videoId }: Props) {
     const state = p.getPlayerState?.();
     if (state === 1) p.pauseVideo?.();
     else p.playVideo?.();
+  }
+
+  function toggleMute() {
+    const p = playerRef.current;
+    if (!p) return;
+    if (p.isMuted?.()) {
+      p.unMute?.();
+      setIsMuted(false);
+    } else {
+      p.mute?.();
+      setIsMuted(true);
+    }
   }
 
   function prev() {
@@ -217,112 +256,106 @@ export default function EmbedPlayer({ playlistId, videoId }: Props) {
     p?.nextVideo?.();
   }
 
-  function seekTo(nextTime: number) {
-    const p = playerRef.current;
-    if (!p) return;
-    p.seekTo?.(Math.max(0, Math.min(duration || 0, nextTime)), true);
-  }
-
   return (
-    <div className="min-h-screen w-screen bg-zinc-100 px-4 py-6 text-zinc-900 dark:bg-black dark:text-zinc-50">
+    <div className="relative min-h-screen w-full overflow-hidden bg-[#ffeff5]">
       {/* Hidden YouTube player host */}
       <div id={hostId} className="h-0 w-0 overflow-hidden" />
 
-      <div className="mx-auto max-w-2xl">
-        <div className="rounded-3xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+      {/* Background blur artwork */}
+      <div
+        className="pointer-events-none absolute -inset-8 bg-cover bg-center blur-2xl"
+        style={{
+          backgroundImage: thumbnailUrl ? `url("${thumbnailUrl}")` : undefined,
+          backgroundColor: thumbnailUrl ? undefined : "#ffeff5",
+        }}
+      />
+      <div className="pointer-events-none absolute inset-0 bg-white/50" />
+
+      {/* Player */}
+      <div className="absolute left-0 right-0 top-1/2 mx-auto w-[760px] max-w-[92vw] -translate-y-1/2">
+        <div className="relative">
           {/* Top info bar */}
-          <div className="flex items-center gap-4 px-5 pb-4 pt-5">
-            <div className="relative h-16 w-16 shrink-0">
-              <div className="absolute inset-0 rounded-full bg-zinc-200 shadow-sm dark:bg-zinc-800" />
-              {thumbnailUrl ? (
-                <div className="absolute inset-0 rounded-full p-1">
-                  <div className="relative h-full w-full overflow-hidden rounded-full">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={thumbnailUrl}
-                      alt=""
-                      className="h-full w-full object-cover"
-                      referrerPolicy="no-referrer"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 rounded-full ring-1 ring-black/10 dark:ring-white/10" />
-                    <div className="absolute left-1/2 top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/80 shadow-sm backdrop-blur dark:bg-black/60" />
-                  </div>
-                </div>
-              ) : null}
+          <div className="relative z-[1] mx-auto w-[95%] rounded-[22px] bg-[#f7f2e7] px-6 py-6 pl-[248px] shadow-[0_24px_70px_rgba(0,0,0,0.20)]">
+            <div className="text-[34px] font-semibold tracking-tight text-[#2a2a2a]">
+              {author || "YouTube"}
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-lg font-semibold leading-6">{title}</div>
-              <div className="truncate text-sm text-zinc-500 dark:text-zinc-400">
-                {author || " "}
-              </div>
+            <div className="mt-1 text-[18px] font-medium text-[#b7b7b7]">
+              {title}
+            </div>
 
-              <div className="mt-3">
-                <div className="h-2 w-full rounded-full bg-zinc-200 dark:bg-zinc-800">
-                  <div
-                    className="h-2 rounded-full bg-amber-400"
-                    style={{ width: `${progress * 100}%` }}
-                  />
-                </div>
-
-                <div className="mt-2 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
-                  <div className="font-mono">{formatTime(current)}</div>
-                  <div className="font-mono">{formatTime(duration)}</div>
-                </div>
-
-                <input
-                  className="mt-2 w-full accent-amber-400"
-                  type="range"
-                  min={0}
-                  max={Math.max(1, Math.floor(duration || 1))}
-                  value={Math.min(Math.floor(current), Math.floor(duration || 1))}
-                  onMouseDown={() => setSeeking(true)}
-                  onMouseUp={() => setSeeking(false)}
-                  onTouchStart={() => setSeeking(true)}
-                  onTouchEnd={() => setSeeking(false)}
-                  onChange={(e) => {
-                    const v = Number(e.target.value);
-                    setCurrent(v);
-                  }}
-                  onPointerUp={(e) => {
-                    const el = e.currentTarget as HTMLInputElement;
-                    const v = Number(el.value);
-                    seekTo(v);
-                  }}
-                />
-              </div>
+            {/* time + thin progress */}
+            <div className="mt-4 flex items-center justify-between text-[14px] text-[#d4b35b]">
+              <span className="font-mono">{formatTime(current)}</span>
+              <span className="font-mono">{formatTime(duration)}</span>
+            </div>
+            <div className="mt-2 h-[6px] w-full rounded-full bg-[#ead9a6]">
+              <div
+                className="h-[6px] rounded-full bg-[#f2b84b]"
+                style={{ width: `${progress * 100}%` }}
+              />
             </div>
           </div>
 
-          {/* Controls */}
-          <div className="flex items-center justify-center gap-10 px-6 pb-6">
-            <button
-              type="button"
-              onClick={prev}
-              className="rounded-2xl bg-zinc-100 px-4 py-3 text-sm font-medium text-zinc-900 hover:bg-zinc-200 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800"
-            >
-              이전
-            </button>
+          {/* Disc artwork (outside top box, above all) */}
+          <div className="absolute left-10 top-1/2 z-[3] -translate-y-1/2">
+            <div className="relative h-[220px] w-[220px] rounded-full bg-white shadow-[0_0_0_4px_rgba(255,255,255,0.85)]">
+              <div className="absolute inset-[4px] overflow-hidden rounded-full bg-white">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={
+                    thumbnailUrl ||
+                    "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+                  }
+                  alt=""
+                  referrerPolicy="no-referrer"
+                  className={[
+                    "h-full w-full object-cover",
+                    isPlaying ? "animate-[spin_3s_linear_infinite]" : "",
+                  ].join(" ")}
+                />
+              </div>
+              <div className="absolute left-1/2 top-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/90 shadow-sm" />
+            </div>
+          </div>
+
+          {/* Big control bar */}
+          <div className="relative z-[2] mt-[-18px] rounded-[26px] bg-white/85 px-8 py-8 backdrop-blur">
+            <div className="mt-2 flex items-center justify-between pl-[248px] pr-10 text-black/30">
+              <button type="button" onClick={prev} aria-label="이전" className="p-2">
+                <svg width="56" height="56" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6 6h2v12H6V6zm3.5 6 10.5 6V6L9.5 12z" />
+                </svg>
+              </button>
+              <button type="button" onClick={toggle} aria-label="재생/일시정지" className="p-2">
+                {isPlaying ? (
+                  <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M6 5h4v14H6V5zm8 0h4v14h-4V5z" />
+                  </svg>
+                ) : (
+                  <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7L8 5z" />
+                  </svg>
+                )}
+              </button>
+              <button type="button" onClick={next} aria-label="다음" className="p-2">
+                <svg width="56" height="56" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M16 6h2v12h-2V6zM4 18V6l10.5 6L4 18z" />
+                </svg>
+              </button>
+            </div>
 
             <button
               type="button"
-              onClick={toggle}
-              className="rounded-2xl bg-zinc-900 px-6 py-3 text-sm font-semibold text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+              onClick={toggleMute}
+              className="absolute bottom-4 right-5 text-xs font-medium text-black/35"
+              title="노션 자동재생 성공률을 위해 기본 음소거"
             >
-              {isPlaying ? "일시정지" : "재생"}
-            </button>
-
-            <button
-              type="button"
-              onClick={next}
-              className="rounded-2xl bg-zinc-100 px-4 py-3 text-sm font-medium text-zinc-900 hover:bg-zinc-200 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800"
-            >
-              다음
+              {isMuted ? "Muted" : "Sound"}
             </button>
           </div>
         </div>
 
-        <div className="mt-3 text-center text-xs text-zinc-500 dark:text-zinc-400">
+        <div className="mt-4 text-center text-xs text-black/35">
           노션 임베드용. 실제 재생은 YouTube 플레이어로 수행됨.
         </div>
       </div>
