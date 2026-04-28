@@ -205,7 +205,7 @@ export default function HomePage() {
                 />
               </div>
               <div className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-                노션에서 세로가 짧으면 여기만 키우면 됨.
+                노션에서 세로가 짧으면 이 값을 조절해주세요.
               </div>
             </div>
           </div>
