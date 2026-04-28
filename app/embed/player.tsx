@@ -328,7 +328,7 @@ export default function EmbedPlayer({
             }}
           >
           {/* Top info bar */}
-          <div className="relative z-[1] mx-auto w-[95%] rounded-[22px] bg-[#f7f2e7] px-6 py-6 pl-[248px] shadow-[0_24px_70px_rgba(0,0,0,0.20)]">
+          <div className="relative z-[1] mx-auto w-[95%] rounded-[22px] bg-[#f7f2e7] px-6 py-6 pl-[248px]">
             <div className="text-[34px] font-semibold tracking-tight text-[#2a2a2a]">
               {author || "YouTube"}
             </div>
