@@ -1,62 +1,40 @@
-import { extractYouTubePlaylistId, extractYouTubeVideoId } from "../lib/youtube";
-import EmbedPlayer from "@/app/embed/player";
+import type { Metadata } from "next";
+import EmbedPlayer from "@/components/embed/embed-player";
+import {
+  extractYouTubePlaylistId,
+  extractYouTubeVideoId,
+} from "@/lib/youtube";
+import {
+  getSearchParam,
+  parseBoolParam,
+  resolveSearchParams,
+  type AppSearchParams,
+} from "@/lib/search-params";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Notion Embed",
   description: "Embed-only view for Notion",
 };
 
-type Props = {
-  searchParams?:
-    | Record<string, string | string[] | undefined>
-    | Promise<Record<string, string | string[] | undefined>>;
+type EmbedPageProps = {
+  searchParams?: AppSearchParams;
 };
 
-function isPromiseLike<T>(v: unknown): v is Promise<T> {
-  if (typeof v !== "object" || v === null) return false;
-  const then = (v as { then?: unknown }).then;
-  return typeof then === "function";
-}
-
-function getParam(searchParams: Props["searchParams"], key: string) {
-  if (!searchParams || isPromiseLike(searchParams)) return undefined;
-  const v = (searchParams as Record<string, string | string[] | undefined>)[key];
-  return Array.isArray(v) ? v[0] : v;
-}
-
-function parseBool(v: string | undefined, defaultValue: boolean) {
-  if (v == null) return defaultValue;
-  const s = String(v).trim().toLowerCase();
-  if (["1", "true", "yes", "y", "on"].includes(s)) return true;
-  if (["0", "false", "no", "n", "off"].includes(s)) return false;
-  return defaultValue;
-}
-
-async function resolveSearchParams(
-  searchParams: Props["searchParams"],
-): Promise<Record<string, string | string[] | undefined> | undefined> {
-  if (!searchParams) return undefined;
-  if (isPromiseLike<Record<string, string | string[] | undefined>>(searchParams)) {
-    return (await searchParams) as Record<string, string | string[] | undefined>;
-  }
-  return searchParams as Record<string, string | string[] | undefined>;
-}
-
-export default async function EmbedPage({ searchParams }: Props) {
+export default async function EmbedPage({ searchParams }: EmbedPageProps) {
   const sp = await resolveSearchParams(searchParams);
-  const listInput = getParam(sp, "list") ?? "";
-  const vInput = getParam(sp, "v") ?? "";
-  const autoplay = parseBool(getParam(sp, "autoplay"), true);
-  const muted = parseBool(getParam(sp, "muted"), false);
+  const listInput = getSearchParam(sp, "list") ?? "";
+  const vInput = getSearchParam(sp, "v") ?? "";
+  const autoplay = parseBoolParam(getSearchParam(sp, "autoplay"), true);
+  const muted = parseBoolParam(getSearchParam(sp, "muted"), false);
 
   const playlistId = extractYouTubePlaylistId(listInput);
   const videoId = extractYouTubeVideoId(vInput);
 
   if (!playlistId && !videoId) {
     return (
-      <div className="min-h-screen bg-black text-zinc-50 flex items-center justify-center px-6">
+      <div className="flex min-h-screen items-center justify-center bg-black px-6 text-zinc-50">
         <div className="max-w-md text-center">
           <div className="text-lg font-semibold">링크가 필요해</div>
           <div className="mt-2 text-sm text-zinc-300">
@@ -87,4 +65,3 @@ export default async function EmbedPage({ searchParams }: Props) {
     </>
   );
 }
-
