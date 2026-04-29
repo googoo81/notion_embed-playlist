@@ -1,4 +1,5 @@
 import type { PlayerDiscProps } from "@/types/embed-props";
+import { YOUTUBE_EMBED_PLACEHOLDER_PIXEL } from "@/lib/youtube-media-urls";
 
 export function PlayerDisc({ thumbnailUrl, isPlaying }: PlayerDiscProps) {
   return (
@@ -7,10 +8,7 @@ export function PlayerDisc({ thumbnailUrl, isPlaying }: PlayerDiscProps) {
         <div className="absolute inset-[4px] overflow-hidden rounded-full bg-white">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={
-              thumbnailUrl ||
-              "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
-            }
+            src={thumbnailUrl || YOUTUBE_EMBED_PLACEHOLDER_PIXEL}
             alt=""
             referrerPolicy="no-referrer"
             className={[

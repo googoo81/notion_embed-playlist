@@ -1,14 +1,18 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 import type { YouTubePlayer } from "@/types/youtube";
-import type { YoutubePlaylistFeedItem } from "@/lib/youtube-playlist-feed";
 import {
-  batchFetchYoutubeVideoMeta,
-  runAfterCommit,
-} from "@/lib/youtube-video-meta-batch";
+  IOS_UNIFORM_DESIGN_WIDTH_PX,
+} from "@/components/embed/ios-uniform-scale-shell";
 import { PlaylistPlayingIndicator } from "@/components/embed/playlist-playing-indicator";
+import { resolvePlaylistQueueRowLabels } from "@/lib/playlist-queue-row-labels";
+import {
+  YOUTUBE_EMBED_PLACEHOLDER_PIXEL,
+  youtubeVideoThumbnailMqUrl,
+} from "@/lib/youtube-media-urls";
+import { useIosQueuePanelMetrics } from "@/hooks/use-ios-queue-panel-metrics";
+import { usePlaylistSidePanelData } from "@/hooks/use-playlist-side-panel-data";
 
 type PlaylistSidePanelProps = {
   playlistId: string;
@@ -24,39 +28,6 @@ type PlaylistSidePanelProps = {
   panelFramePx?: { width: number; height: number } | null;
 };
 
-function thumbUrl(videoId: string): string {
-  return `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
-}
-
-/** iOS 플레이어 카드와 동일 — 재생 중 썸네일 없을 때 */
-const IOS_CARD_PLACEHOLDER =
-  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
-
-function playlistRowCopy(
-  item: YoutubePlaylistFeedItem,
-  index: number,
-  active: boolean,
-  atomFeedSupported: boolean,
-  currentTitle: string,
-  currentAuthor: string,
-  titleById: Record<string, string>,
-  authorById: Record<string, string>,
-): { title: string; author: string } {
-  const title = atomFeedSupported
-    ? item.title
-    : active && currentTitle.trim()
-      ? currentTitle
-      : titleById[item.videoId] || `영상 ${index + 1}`;
-  const author = atomFeedSupported
-    ? active && currentAuthor.trim()
-      ? currentAuthor
-      : item.author?.trim() || authorById[item.videoId] || ""
-    : active && currentAuthor.trim()
-      ? currentAuthor
-      : authorById[item.videoId] || "";
-  return { title, author };
-}
-
 export function PlaylistSidePanel({
   playlistId,
   playerRef,
@@ -66,213 +37,23 @@ export function PlaylistSidePanel({
   currentAuthor,
   panelFramePx,
 }: PlaylistSidePanelProps) {
-  const [items, setItems] = useState<YoutubePlaylistFeedItem[]>([]);
-  const [titleById, setTitleById] = useState<Record<string, string>>({});
-  const titleByIdRef = useRef<Record<string, string>>({});
-  const [authorById, setAuthorById] = useState<Record<string, string>>({});
-  const authorByIdRef = useRef<Record<string, string>>({});
-  const [status, setStatus] = useState<"idle" | "loading" | "ok" | "error">(
-    "idle",
-  );
-  const [message, setMessage] = useState("");
-  const titleFetchGenRef = useRef(0);
-  const itemsRef = useRef<YoutubePlaylistFeedItem[]>([]);
+  const { items, status, message, titleById, authorById } =
+    usePlaylistSidePanelData(playlistId, atomFeedSupported, playerRef);
 
-  useLayoutEffect(() => {
-    titleByIdRef.current = titleById;
-    authorByIdRef.current = authorById;
-    itemsRef.current = items;
-  }, [titleById, authorById, items]);
+  const frameLocked =
+    panelFramePx != null &&
+    Number.isFinite(panelFramePx.width) &&
+    Number.isFinite(panelFramePx.height) &&
+    panelFramePx.width > 0 &&
+    panelFramePx.height > 0;
 
-  useEffect(() => {
-    if (!atomFeedSupported) return;
-    let cancelled = false;
-    runAfterCommit(() => {
-      if (cancelled) return;
-      setStatus("loading");
-      setMessage("");
-    });
+  const { scale: iosQueueScale, designViewportHeightPx: iosQueueDesignViewportHeightPx } =
+    useIosQueuePanelMetrics(frameLocked, panelFramePx ?? null);
 
-    void (async () => {
-      try {
-        const res = await fetch(
-          `/api/youtube-playlist?list=${encodeURIComponent(playlistId)}`,
-        );
-        const data = (await res.json()) as {
-          items?: YoutubePlaylistFeedItem[];
-          error?: string;
-        };
-        if (cancelled) return;
-        if (!res.ok) {
-          setStatus("error");
-          setMessage(data.error ?? "목록을 불러오지 못했습니다.");
-          setItems([]);
-          return;
-        }
-        setItems(Array.isArray(data.items) ? data.items : []);
-        setStatus("ok");
-      } catch {
-        if (cancelled) return;
-        setStatus("error");
-        setMessage("네트워크 오류");
-        setItems([]);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [playlistId, atomFeedSupported]);
-
-  const itemsVideoKeyAtom = atomFeedSupported
-    ? items.map((x) => x.videoId).join("\n")
-    : "";
-
-  useEffect(() => {
-    if (!atomFeedSupported || !itemsVideoKeyAtom || status !== "ok") return;
-
-    const needIds = [
-      ...new Set(
-        items
-          .filter((i) => !i.author?.trim())
-          .map((i) => i.videoId)
-          .filter((id) => !authorByIdRef.current[id]),
-      ),
-    ];
-    if (needIds.length === 0) return;
-
-    let cancelled = false;
-    const gen = titleFetchGenRef.current;
-
-    void batchFetchYoutubeVideoMeta(needIds, {
-      cancelled: () => cancelled,
-      gen,
-      genRef: titleFetchGenRef,
-      includeTitles: false,
-      setTitleById: null,
-      setAuthorById,
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [atomFeedSupported, itemsVideoKeyAtom, status]);
-
-  useEffect(() => {
-    if (atomFeedSupported) return;
-    let cancelled = false;
-
-    function scheduleTitleResolve(ids: string[]): void {
-      const need = [...new Set(ids)].filter((id) => {
-        const hasTitle = Boolean(titleByIdRef.current[id]?.trim());
-        const hasAuthor = Boolean(authorByIdRef.current[id]?.trim());
-        return !hasTitle || !hasAuthor;
-      });
-      if (need.length === 0) return;
-
-      const gen = ++titleFetchGenRef.current;
-
-      void batchFetchYoutubeVideoMeta(need, {
-        cancelled: () => cancelled,
-        gen,
-        genRef: titleFetchGenRef,
-        includeTitles: true,
-        setTitleById,
-        setAuthorById,
-      });
-    }
-
-    const applyIds = (ids: string[]): void => {
-      if (cancelled) return;
-      let listChanged = false;
-      setItems((prev) => {
-        const same =
-          prev.length === ids.length &&
-          prev.every((x, i) => x.videoId === ids[i]);
-        if (same) return prev;
-        listChanged = true;
-        return ids.map((videoId) => ({ videoId, title: videoId }));
-      });
-      setStatus("ok");
-      if (listChanged) scheduleTitleResolve(ids);
-    };
-
-    const tick = (): void => {
-      const ids = playerRef.current?.getPlaylist?.();
-      if (Array.isArray(ids) && ids.length > 0) applyIds(ids);
-    };
-
-    runAfterCommit(() => {
-      if (cancelled) return;
-      setStatus("loading");
-      setMessage("");
-      setItems([]);
-      tick();
-    });
-
-    const intervalId = window.setInterval(tick, 700);
-
-    const timeoutId = window.setTimeout(() => {
-      if (cancelled) return;
-      setStatus((s) => {
-        if (s !== "ok") {
-          setMessage(
-            "재생 목록을 플레이어에서 읽지 못했습니다. 잠시 후 다시 시도해 주세요.",
-          );
-          return "error";
-        }
-        return s;
-      });
-    }, 20000);
-
-    return () => {
-      cancelled = true;
-      titleFetchGenRef.current += 1;
-      window.clearInterval(intervalId);
-      window.clearTimeout(timeoutId);
-    };
-  }, [atomFeedSupported, playlistId]);
-
-  /** Mix(RD) 등: 제목만 있고 oEmbed의 채널이 비는 경우 재요청 */
-  const itemsVideoKeyMix =
-    !atomFeedSupported && status === "ok" && items.length > 0
-      ? items.map((x) => x.videoId).join("\n")
-      : "";
-
-  const mixAuthorEffectKeyPanel = [
-    atomFeedSupported ? "1" : "0",
-    status === "ok" ? "1" : "0",
-    itemsVideoKeyMix,
-  ].join("\u0001");
-
-  useEffect(() => {
-    if (atomFeedSupported || status !== "ok" || !itemsVideoKeyMix) return;
-
-    const needIds = [
-      ...new Set(
-        itemsRef.current
-          .map((i) => i.videoId)
-          .filter((id) => !authorByIdRef.current[id]?.trim()),
-      ),
-    ];
-    if (needIds.length === 0) return;
-
-    let cancelled = false;
-    const gen = titleFetchGenRef.current;
-
-    void batchFetchYoutubeVideoMeta(needIds, {
-      cancelled: () => cancelled,
-      gen,
-      genRef: titleFetchGenRef,
-      includeTitles: true,
-      setTitleById,
-      setAuthorById,
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [mixAuthorEffectKeyPanel]);
+  const iosCardBgSrc = currentVideoId.trim()
+    ? youtubeVideoThumbnailMqUrl(currentVideoId)
+    : YOUTUBE_EMBED_PLACEHOLDER_PIXEL;
+  const iosCardHasThumb = Boolean(currentVideoId.trim());
 
   function playAt(index: number): void {
     const p = playerRef.current;
@@ -283,18 +64,6 @@ export function PlaylistSidePanel({
       /* API 미지원 브라우저 등 */
     }
   }
-
-  const frameLocked =
-    panelFramePx != null &&
-    Number.isFinite(panelFramePx.width) &&
-    Number.isFinite(panelFramePx.height) &&
-    panelFramePx.width > 0 &&
-    panelFramePx.height > 0;
-
-  const iosCardBgSrc = currentVideoId.trim()
-    ? thumbUrl(currentVideoId)
-    : IOS_CARD_PLACEHOLDER;
-  const iosCardHasThumb = Boolean(currentVideoId.trim());
 
   const headerEl = (
     <header
@@ -350,16 +119,18 @@ export function PlaylistSidePanel({
         <ul className="flex flex-col gap-0.5" role="list">
           {items.map((item, index) => {
             const active = item.videoId === currentVideoId;
-            const { title: rowTitle, author: rowAuthor } = playlistRowCopy(
-              item,
-              index,
-              active,
-              atomFeedSupported,
-              currentTitle,
-              currentAuthor,
-              titleById,
-              authorById,
-            );
+            const { title: rowTitle, author: rowAuthor } =
+              resolvePlaylistQueueRowLabels(
+                item,
+                index,
+                active,
+                atomFeedSupported,
+                currentTitle,
+                currentAuthor,
+                titleById,
+                authorById,
+                "panel",
+              );
             return (
               <li key={`${item.videoId}-${index}`}>
                 <button
@@ -374,7 +145,7 @@ export function PlaylistSidePanel({
                   <span className="relative size-11 shrink-0 overflow-hidden rounded-[7px] bg-zinc-900 ring-1 ring-white/[0.08]">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={thumbUrl(item.videoId)}
+                      src={youtubeVideoThumbnailMqUrl(item.videoId)}
                       alt=""
                       className="h-full w-full object-cover"
                       loading="lazy"
@@ -423,8 +194,8 @@ export function PlaylistSidePanel({
       aria-label="플레이리스트"
       className={
         frameLocked
-          ? "relative flex min-h-0 shrink-0 flex-col overflow-hidden rounded-[44px] text-left text-white ring-1 ring-white/10"
-          : "playlist-side-panel flex h-full min-h-0 w-[min(44vw,18rem)] shrink-0 flex-col overflow-hidden rounded-[22px] bg-black/32 text-left text-white ring-1 ring-white/[0.12] backdrop-blur-2xl backdrop-saturate-150 sm:w-[19rem]"
+          ? "relative flex min-h-0 shrink-0 flex-col overflow-hidden text-left text-white ring-1 ring-white/10"
+          : "playlist-side-panel flex h-full min-h-0 w-[clamp(12rem,42vw,22rem)] shrink-0 flex-col overflow-hidden rounded-[22px] bg-black/32 text-left text-white ring-1 ring-white/[0.12] backdrop-blur-2xl backdrop-saturate-150 sm:w-[clamp(13rem,36vw,22rem)]"
       }
       style={{
         fontFamily:
@@ -435,30 +206,40 @@ export function PlaylistSidePanel({
               height: panelFramePx.height,
               maxWidth: "100%",
               maxHeight: "100%",
+              borderRadius: 44 * iosQueueScale,
             }
           : {}),
       }}
     >
       {frameLocked ? (
-        <>
-          <div
-            aria-hidden
-            className="absolute inset-0 scale-125 bg-cover bg-center blur-3xl saturate-125"
-            style={{ backgroundImage: `url(${iosCardBgSrc})` }}
-          />
-          <div
-            aria-hidden
-            className={
-              iosCardHasThumb
-                ? "absolute inset-0 bg-black/45"
-                : "absolute inset-0 bg-[#6d6d70]"
-            }
-          />
-          <div className="player-layout-ios__inner relative z-10 flex min-h-0 min-w-0 flex-1 flex-col">
-            {headerEl}
-            {scrollEl}
+        <div
+          className="origin-top-left will-change-transform"
+          style={{
+            width: IOS_UNIFORM_DESIGN_WIDTH_PX,
+            height: iosQueueDesignViewportHeightPx,
+            transform: `scale(${iosQueueScale})`,
+          }}
+        >
+          <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden">
+            <div
+              aria-hidden
+              className="absolute inset-0 scale-125 bg-cover bg-center blur-3xl saturate-125"
+              style={{ backgroundImage: `url(${iosCardBgSrc})` }}
+            />
+            <div
+              aria-hidden
+              className={
+                iosCardHasThumb
+                  ? "absolute inset-0 bg-black/45"
+                  : "absolute inset-0 bg-[#6d6d70]"
+              }
+            />
+            <div className="player-layout-ios__inner relative z-10 flex min-h-0 min-w-0 flex-1 flex-col">
+              {headerEl}
+              {scrollEl}
+            </div>
           </div>
-        </>
+        </div>
       ) : (
         <>
           {headerEl}

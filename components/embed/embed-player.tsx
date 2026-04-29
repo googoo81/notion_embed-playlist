@@ -15,9 +15,7 @@ const DEFAULT_VOLUME = 10;
 const DESIGN_WIDTH = 760;
 const DESIGN_HEIGHT = 360;
 
-function hqThumbnailUrl(videoId: string): string {
-  return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-}
+import { youtubeVideoThumbnailHqUrl } from "@/lib/youtube-media-urls";
 
 function applyVideoDataToUi(
   vd: YouTubeVideoData | undefined,
@@ -30,7 +28,7 @@ function applyVideoDataToUi(
   if (!vd) return;
   if (vd.title) setters.setTitle(vd.title);
   if (vd.author) setters.setAuthor(vd.author);
-  if (vd.video_id) setters.setThumbnailUrl(hqThumbnailUrl(vd.video_id));
+  if (vd.video_id) setters.setThumbnailUrl(youtubeVideoThumbnailHqUrl(vd.video_id));
 }
 
 export default function EmbedPlayer({

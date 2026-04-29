@@ -5,9 +5,7 @@ import type { EmbedPlayerViewProps } from "@/types/embed-props";
 import { IosMarqueeText } from "@/components/embed/ios-marquee-text";
 import { IosUniformScaleShell } from "@/components/embed/ios-uniform-scale-shell";
 import { TransportIcon, VolumeIcon } from "@/components/embed/transport-icon";
-
-const PLACEHOLDER_PIXEL =
-  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+import { YOUTUBE_EMBED_PLACEHOLDER_PIXEL } from "@/lib/youtube-media-urls";
 
 export function PlayerLayoutIos({
   hostId,
@@ -28,7 +26,7 @@ export function PlayerLayoutIos({
   onSeek,
   iosShellOuterRef,
 }: EmbedPlayerViewProps) {
-  const artSrc = thumbnailUrl || PLACEHOLDER_PIXEL;
+  const artSrc = thumbnailUrl || YOUTUBE_EMBED_PLACEHOLDER_PIXEL;
   const subtitle = author || title || "YouTube";
   const hasRealThumbnail = Boolean(thumbnailUrl?.trim());
 
