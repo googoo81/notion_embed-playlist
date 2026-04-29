@@ -9,6 +9,8 @@ export type EmbedPlayerProps = {
   ui?: EmbedPlayerUi;
   /** `?plist=1` — 플레이리스트가 있을 때 우측 목록 패널 */
   showPlaylistPanel?: boolean;
+  /** 분리 임베드 시 대기열 iframe과 동기화 (`sync=` 와 동일 값) */
+  syncKey?: string;
 };
 
 export type EmbedPlayerViewProps = {
@@ -33,6 +35,8 @@ export type EmbedPlayerViewProps = {
   applyVolume: (value: number) => void;
   onPrev: () => void;
   onNext: () => void;
+  /** iOS: 스케일된 카드 박스 DOM (재생 대기열 높이 동기화) */
+  iosShellOuterRef?: RefObject<HTMLDivElement | null>;
 };
 
 export type PlayerTopBarProps = {

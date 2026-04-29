@@ -28,6 +28,7 @@ export function PlayerLayoutClassic({
   applyVolume,
   onPrev,
   onNext,
+  iosShellOuterRef: _iosShellOuterRef,
 }: EmbedPlayerViewProps) {
   return (
     <div className="relative w-full overflow-hidden bg-transparent">

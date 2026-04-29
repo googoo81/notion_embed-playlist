@@ -25,10 +25,15 @@ export function HomeEmbedCard({
   onEmbedUiChange,
   playlistPanel,
   onPlaylistPanelChange,
+  playlistSplitIframe,
+  onPlaylistSplitIframeChange,
   embedUrl,
+  embedQueueUrl,
   snippet,
+  queueSnippet,
   youtubeOfficialSnippet,
   onCopy,
+  onCopyQueue,
   onCopyOfficial,
 }: HomeEmbedCardProps) {
   return (
@@ -78,6 +83,20 @@ export function HomeEmbedCard({
           임베드에서만 동작하고, 노션·미리보기는 가로를 넉넉히 잡는 편이 좋습니다. Mix(
           <span className="font-mono">RD…</span>)는 공개 피드가 없어 우측 목록이 플레이어
           API로 채워집니다.
+        </p>
+        <CheckboxRow
+          label="재생 목록만 별도 iframe으로 (플레이어와 나란히)"
+          checked={playlistSplitIframe}
+          onChange={(e) => onPlaylistSplitIframeChange(e.target.checked)}
+          disabled={!playlistPanel || !playlistId}
+          className={
+            !playlistPanel || !playlistId ? "mt-2 opacity-60" : "mt-2"
+          }
+        />
+        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          같은 노션 페이지에 <strong className="font-normal">플레이어 iframe</strong>과{" "}
+          <strong className="font-normal">대기열 iframe</strong>을 두 칸으로 넣습니다.{" "}
+          <span className="font-mono">sync</span> 값이 쌍으로 맞아야 연동됩니다.
         </p>
       </div>
 
@@ -134,15 +153,30 @@ export function HomeEmbedCard({
       </div>
 
       <div className="mt-4">
-        <div className="text-sm font-medium">커스텀 플레이어 임베드 URL</div>
+        <div className="text-sm font-medium">
+          커스텀 플레이어 임베드 URL
+          {playlistSplitIframe && playlistPanel ? " (플레이어)" : ""}
+        </div>
         <UrlDisplay>
           {embedUrl || <span className="text-zinc-400">-</span>}
         </UrlDisplay>
       </div>
 
+      {playlistSplitIframe && playlistPanel && embedQueueUrl ? (
+        <div className="mt-3">
+          <div className="text-sm font-medium">재생 대기열 임베드 URL</div>
+          <UrlDisplay>
+            {embedQueueUrl || <span className="text-zinc-400">-</span>}
+          </UrlDisplay>
+        </div>
+      ) : null}
+
       <div className="mt-4">
         <div className="flex items-center justify-between">
-          <div className="text-sm font-medium">커스텀 플레이어 iframe 코드</div>
+          <div className="text-sm font-medium">
+            커스텀 플레이어 iframe 코드
+            {playlistSplitIframe && playlistPanel ? " (플레이어)" : ""}
+          </div>
           <Button disabled={!snippet} onClick={onCopy}>
             복사
           </Button>
@@ -154,6 +188,23 @@ export function HomeEmbedCard({
           placeholder="플레이리스트를 입력하면 여기 코드가 생성됩니다."
         />
       </div>
+
+      {playlistSplitIframe && playlistPanel ? (
+        <div className="mt-4">
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-medium">재생 대기열 iframe 코드</div>
+            <Button disabled={!queueSnippet} onClick={onCopyQueue}>
+              복사
+            </Button>
+          </div>
+          <CodeTextarea
+            value={queueSnippet}
+            readOnly
+            rows={7}
+            placeholder="위에서 분리 옵션을 켜면 대기열 코드가 생성됩니다."
+          />
+        </div>
+      ) : null}
 
       <div className="mt-4">
         <div className="flex items-center justify-between">

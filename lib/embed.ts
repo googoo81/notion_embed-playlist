@@ -10,6 +10,10 @@ export type BuildEmbedUrlParams = {
   embedUi?: EmbedPlayerUi;
   /** 우측 재생 목록 패널 (`plist=1`), 플레이리스트 임베드에서만 동작 */
   playlistPanel?: boolean;
+  /** 분리 임베드: `player` | `queue` */
+  embedPart?: "player" | "queue";
+  /** 분리 임베드 시 같은 페이지 iframe끼리 맞출 키 (`sync=`) */
+  syncKey?: string;
 };
 
 /** 기본 iframe 스니펫 높이(px). 스니펫 문자열과 맞춰야 함. */
@@ -32,6 +36,12 @@ export function buildEmbedUrl(
   url.searchParams.set("ui", embedUiToSearchParam(ui));
   if (params.playlistPanel) {
     url.searchParams.set("plist", "1");
+  }
+  if (params.embedPart) {
+    url.searchParams.set("part", params.embedPart);
+  }
+  if (params.syncKey) {
+    url.searchParams.set("sync", params.syncKey);
   }
   return url.toString();
 }

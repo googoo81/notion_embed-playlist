@@ -4,7 +4,9 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { PlayerLayoutClassic } from "@/components/embed/player-layout-classic";
 import { PlayerLayoutIos } from "@/components/embed/player-layout-ios";
 import { PlaylistSidePanel } from "@/components/embed/playlist-side-panel";
+import { useEmbedPlayerBroadcastSync } from "@/components/embed/use-embed-player-broadcast-sync";
 import { loadYouTubeIframeApi } from "@/components/embed/youtube-iframe-api";
+import { isValidEmbedSyncKey } from "@/lib/embed-sync";
 import { isYoutubeAtomPlaylistFeedSupported } from "@/lib/youtube-playlist-feed";
 import type { EmbedPlayerProps } from "@/types/embed-props";
 import type { YouTubePlayer, YouTubeVideoData } from "@/types/youtube";
@@ -38,7 +40,10 @@ export default function EmbedPlayer({
   muted = false,
   ui = "classic",
   showPlaylistPanel = false,
+  syncKey: syncKeyProp,
 }: EmbedPlayerProps) {
+  const syncKey =
+    syncKeyProp && isValidEmbedSyncKey(syncKeyProp) ? syncKeyProp : undefined;
   const key = playlistId ?? videoId ?? "unknown";
   const hostId = useMemo(
     () => `yt-player-${key.replace(/[^a-zA-Z0-9_-]/g, "")}`,
@@ -61,9 +66,11 @@ export default function EmbedPlayer({
   const [currentVideoId, setCurrentVideoId] = useState("");
   const scaleHostRef = useRef<HTMLDivElement | null>(null);
   const playerMeasureRef = useRef<HTMLDivElement | null>(null);
-  const [playlistPanelHeightPx, setPlaylistPanelHeightPx] = useState<
-    number | null
-  >(null);
+  const iosShellOuterRef = useRef<HTMLDivElement | null>(null);
+  const [playlistPanelFramePx, setPlaylistPanelFramePx] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
 
   const progress =
     duration > 0 ? Math.min(1, Math.max(0, current / duration)) : 0;
@@ -217,28 +224,46 @@ export default function EmbedPlayer({
   }, [ui]);
 
   useLayoutEffect(() => {
-    if (!showPlaylistPanel || !playlistId) {
-      setPlaylistPanelHeightPx(null);
+    if (!showPlaylistPanel || !playlistId || syncKey) {
+      setPlaylistPanelFramePx(null);
       return;
     }
 
-    const el = playerMeasureRef.current;
-    if (!el) return;
+    let ro: ResizeObserver | null = null;
+    let rafId = 0;
 
-    const apply = (): void => {
-      const h = el.getBoundingClientRect().height;
-      if (h > 0) setPlaylistPanelHeightPx(h);
+    const attach = (): void => {
+      const el =
+        ui === "ios"
+          ? iosShellOuterRef.current
+          : playerMeasureRef.current;
+      if (!el) {
+        rafId = requestAnimationFrame(attach);
+        return;
+      }
+
+      const apply = (): void => {
+        const r = el.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) {
+          setPlaylistPanelFramePx({ width: r.width, height: r.height });
+        }
+      };
+
+      apply();
+      ro = new ResizeObserver(apply);
+      ro.observe(el);
     };
 
-    apply();
-    const ro = new ResizeObserver(apply);
-    ro.observe(el);
+    attach();
+
     return () => {
-      ro.disconnect();
+      cancelAnimationFrame(rafId);
+      ro?.disconnect();
     };
   }, [
     showPlaylistPanel,
     playlistId,
+    syncKey,
     ui,
     title,
     author,
@@ -292,6 +317,7 @@ export default function EmbedPlayer({
     hostId,
     hostRef,
     scaleHostRef,
+    iosShellOuterRef,
     title,
     author,
     thumbnailUrl,
@@ -319,7 +345,15 @@ export default function EmbedPlayer({
       <PlayerLayoutClassic {...viewProps} />
     );
 
-  if (showPlaylistPanel && playlistId) {
+  useEmbedPlayerBroadcastSync(syncKey, playerRef, {
+    title,
+    author,
+    currentVideoId,
+    embedUi: ui,
+    iosShellOuterRef,
+  });
+
+  if (showPlaylistPanel && playlistId && !syncKey) {
     return (
       <div className="flex h-full min-h-0 w-full flex-row items-center justify-center gap-2">
         <div
@@ -329,12 +363,14 @@ export default function EmbedPlayer({
           {playerUi}
         </div>
         <PlaylistSidePanel
+          key={playlistId}
           playlistId={playlistId}
           playerRef={playerRef}
           currentVideoId={currentVideoId}
           atomFeedSupported={isYoutubeAtomPlaylistFeedSupported(playlistId)}
           currentTitle={title}
-          panelHeightPx={playlistPanelHeightPx}
+          currentAuthor={author}
+          panelFramePx={playlistPanelFramePx}
         />
       </div>
     );

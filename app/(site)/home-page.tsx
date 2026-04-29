@@ -6,6 +6,7 @@ import {
   buildIframeSnippet,
   buildYouTubeOfficialEmbedUrl,
 } from "@/lib/embed";
+import { generateEmbedSyncKey } from "@/lib/embed-sync";
 import type { EmbedPlayerUi } from "@/lib/embed-ui";
 import {
   extractYouTubePlaylistId,
@@ -33,13 +34,41 @@ export default function HomePage() {
   const [muted, setMuted] = useState(false);
   const [embedUi, setEmbedUi] = useState<EmbedPlayerUi>("classic");
   const [playlistPanel, setPlaylistPanel] = useState(false);
+  const [playlistSplitIframe, setPlaylistSplitIframe] = useState(false);
+  const [splitSyncKey, setSplitSyncKey] = useState<string | null>(null);
 
   const playlistId = extractYouTubePlaylistId(input);
   const videoId = extractYouTubeVideoId(input);
 
   useEffect(() => {
-    if (!playlistId) setPlaylistPanel(false);
+    if (!playlistId) {
+      setPlaylistPanel(false);
+      setPlaylistSplitIframe(false);
+      setSplitSyncKey(null);
+    }
   }, [playlistId]);
+
+  useEffect(() => {
+    if (!playlistPanel) {
+      setPlaylistSplitIframe(false);
+      setSplitSyncKey(null);
+    }
+  }, [playlistPanel]);
+
+  function handlePlaylistSplitChange(checked: boolean): void {
+    setPlaylistSplitIframe(checked);
+    if (checked && playlistId) {
+      setSplitSyncKey((k) => k ?? generateEmbedSyncKey());
+    } else if (!checked) {
+      setSplitSyncKey(null);
+    }
+  }
+
+  const splitActive =
+    Boolean(playlistId) &&
+    playlistPanel &&
+    playlistSplitIframe &&
+    Boolean(splitSyncKey);
 
   const embedUrl =
     baseUrl && (playlistId || videoId)
@@ -49,7 +78,28 @@ export default function HomePage() {
           autoplay,
           muted,
           embedUi,
-          playlistPanel: playlistPanel && Boolean(playlistId),
+          playlistPanel:
+            playlistPanel && Boolean(playlistId) && !playlistSplitIframe,
+          ...(splitActive
+            ? {
+                embedPart: "player" as const,
+                syncKey: splitSyncKey!,
+              }
+            : {}),
+        })
+      : "";
+
+  const embedQueueUrl =
+    baseUrl && splitActive
+      ? buildEmbedUrl(baseUrl, {
+          playlistId: playlistId!,
+          videoId: videoId ?? undefined,
+          autoplay,
+          muted,
+          embedUi,
+          playlistPanel: false,
+          embedPart: "queue",
+          syncKey: splitSyncKey!,
         })
       : "";
 
@@ -60,6 +110,9 @@ export default function HomePage() {
   });
 
   const snippet = embedUrl ? buildIframeSnippet(embedUrl, height) : "";
+  const queueSnippet = embedQueueUrl
+    ? buildIframeSnippet(embedQueueUrl, height)
+    : "";
   const youtubeOfficialSnippet = youtubeOfficialEmbedUrl
     ? buildIframeSnippet(youtubeOfficialEmbedUrl, height)
     : "";
@@ -70,6 +123,11 @@ export default function HomePage() {
   async function onCopy(): Promise<void> {
     if (!snippet) return;
     await navigator.clipboard.writeText(snippet);
+  }
+
+  async function onCopyQueue(): Promise<void> {
+    if (!queueSnippet) return;
+    await navigator.clipboard.writeText(queueSnippet);
   }
 
   async function onCopyOfficial(): Promise<void> {
@@ -97,16 +155,22 @@ export default function HomePage() {
         onEmbedUiChange={setEmbedUi}
         playlistPanel={playlistPanel}
         onPlaylistPanelChange={setPlaylistPanel}
+        playlistSplitIframe={playlistSplitIframe}
+        onPlaylistSplitIframeChange={handlePlaylistSplitChange}
         embedUrl={embedUrl}
+        embedQueueUrl={embedQueueUrl}
         snippet={snippet}
+        queueSnippet={queueSnippet}
         youtubeOfficialSnippet={youtubeOfficialSnippet}
         onCopy={onCopy}
+        onCopyQueue={onCopyQueue}
         onCopyOfficial={onCopyOfficial}
       />
       <HomePreviews
         embedUrl={embedUrl}
         embedUiLabel={embedUiLabel}
         youtubeOfficialEmbedUrl={youtubeOfficialEmbedUrl}
+        embedQueueUrl={embedQueueUrl || undefined}
       />
     </HomePageShell>
   );

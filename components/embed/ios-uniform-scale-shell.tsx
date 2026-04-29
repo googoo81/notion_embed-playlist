@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type RefObject,
 } from "react";
 
 const DESIGN_WIDTH_PX = 320;
@@ -15,6 +16,8 @@ type IosUniformScaleShellProps = {
   /** 레이아웃이 바뀔 때마다 달라지는 문자열 하나(부모에서 useMemo로 생성) */
   layoutKey: string;
   children: ReactNode;
+  /** 스케일 적용 후 실제 표시 박스 — 재생 대기열 높이 맞춤용 */
+  outerBoxRef?: RefObject<HTMLDivElement | null>;
 };
 
 /**
@@ -24,6 +27,7 @@ type IosUniformScaleShellProps = {
 export function IosUniformScaleShell({
   layoutKey,
   children,
+  outerBoxRef,
 }: IosUniformScaleShellProps) {
   const shellRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -67,6 +71,7 @@ export function IosUniformScaleShell({
 
   return (
     <div
+      ref={outerBoxRef}
       className="shrink-0 overflow-hidden"
       style={{
         width: DESIGN_WIDTH_PX * scale,

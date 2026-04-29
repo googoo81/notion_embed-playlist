@@ -26,6 +26,7 @@ export function PlayerLayoutIos({
   onPrev,
   onNext,
   onSeek,
+  iosShellOuterRef,
 }: EmbedPlayerViewProps) {
   const artSrc = thumbnailUrl || PLACEHOLDER_PIXEL;
   const subtitle = author || title || "YouTube";
@@ -46,7 +47,7 @@ export function PlayerLayoutIos({
     <div className="flex min-h-0 w-full items-center justify-center">
       <div id={hostId} ref={hostRef} className="h-0 w-0 overflow-hidden" />
 
-      <IosUniformScaleShell layoutKey={layoutKey}>
+      <IosUniformScaleShell layoutKey={layoutKey} outerBoxRef={iosShellOuterRef}>
         <div className="player-layout-ios__card relative w-full overflow-hidden rounded-[44px] ring-1 ring-white/10">
           <div
             aria-hidden

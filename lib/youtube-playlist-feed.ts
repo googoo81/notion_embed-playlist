@@ -3,6 +3,8 @@
 export type YoutubePlaylistFeedItem = {
   videoId: string;
   title: string;
+  /** Atom `<author><name>` — 업로더(채널) 표시용 */
+  author?: string;
 };
 
 export function parseYoutubePlaylistFeedXml(xml: string): YoutubePlaylistFeedItem[] {
@@ -17,7 +19,15 @@ export function parseYoutubePlaylistFeedXml(xml: string): YoutubePlaylistFeedIte
     const titleMatch = entry.match(/<title(?:[^>]*)>([^<]*)<\/title>/);
     const title = titleMatch?.[1]?.trim().replace(/&amp;/g, "&") ?? videoId;
 
-    items.push({ videoId, title });
+    const authorBlock =
+      entry.match(/<(?:\w+:)?author\b[^>]*>([\s\S]*?)<\/(?:\w+:)?author>/i)?.[1] ??
+      "";
+    const authorNameMatch = authorBlock.match(/<name(?:[^>]*)>([^<]*)<\/name>/i);
+    const authorRaw =
+      authorNameMatch?.[1]?.trim().replace(/&amp;/g, "&").replace(/&quot;/g, '"') ?? "";
+    const author = authorRaw || undefined;
+
+    items.push({ videoId, title, ...(author ? { author } : {}) });
   }
 
   return items;

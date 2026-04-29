@@ -31,10 +31,14 @@ export async function POST(req: Request) {
   ].slice(0, MAX_IDS);
 
   if (clean.length === 0) {
-    return NextResponse.json({ titles: {} as Record<string, string> });
+    return NextResponse.json({
+      titles: {} as Record<string, string>,
+      authors: {} as Record<string, string>,
+    });
   }
 
   const titles: Record<string, string> = {};
+  const authors: Record<string, string> = {};
 
   for (let i = 0; i < clean.length; i += BATCH) {
     const batch = clean.slice(i, i + BATCH);
@@ -44,21 +48,32 @@ export async function POST(req: Request) {
         const oembedUrl = `${OEMBED}?url=${encodeURIComponent(watchUrl)}&format=json`;
         try {
           const res = await fetch(oembedUrl, {
-            headers: { "User-Agent": "notion-embed-playlist/1.0" },
+            headers: {
+              "User-Agent": "notion-embed-playlist/1.0",
+              Accept: "application/json",
+              "Accept-Language": "en-US,en;q=0.9,ko;q=0.8",
+            },
+            cache: "no-store",
           });
-          if (!res.ok) return [id, ""] as const;
-          const j = (await res.json()) as { title?: string };
+          if (!res.ok) return [id, "", ""] as const;
+          const j = (await res.json()) as {
+            title?: string;
+            author_name?: string;
+          };
           const title = typeof j.title === "string" ? j.title.trim() : "";
-          return [id, title] as const;
+          const author =
+            typeof j.author_name === "string" ? j.author_name.trim() : "";
+          return [id, title, author] as const;
         } catch {
-          return [id, ""] as const;
+          return [id, "", ""] as const;
         }
       }),
     );
-    for (const [id, title] of results) {
+    for (const [id, title, author] of results) {
       if (title) titles[id] = title;
+      if (author) authors[id] = author;
     }
   }
 
-  return NextResponse.json({ titles });
+  return NextResponse.json({ titles, authors });
 }
