@@ -6,6 +6,7 @@ import {
   buildIframeSnippet,
   buildYouTubeOfficialEmbedUrl,
 } from "@/lib/embed";
+import type { EmbedPlayerUi } from "@/lib/embed-ui";
 import {
   extractYouTubePlaylistId,
   extractYouTubeVideoId,
@@ -30,6 +31,7 @@ export default function HomePage() {
   const [height, setHeight] = useState(480);
   const [autoplay, setAutoplay] = useState(true);
   const [muted, setMuted] = useState(false);
+  const [embedUi, setEmbedUi] = useState<EmbedPlayerUi>("classic");
 
   const playlistId = extractYouTubePlaylistId(input);
   const videoId = extractYouTubeVideoId(input);
@@ -41,6 +43,7 @@ export default function HomePage() {
           videoId: videoId ?? undefined,
           autoplay,
           muted,
+          embedUi,
         })
       : "";
 
@@ -54,6 +57,9 @@ export default function HomePage() {
   const youtubeOfficialSnippet = youtubeOfficialEmbedUrl
     ? buildIframeSnippet(youtubeOfficialEmbedUrl, height)
     : "";
+
+  const embedUiLabel =
+    embedUi === "ios" ? "iOS 컨트롤 센터 스타일" : "클래식";
 
   async function onCopy(): Promise<void> {
     if (!snippet) return;
@@ -81,6 +87,8 @@ export default function HomePage() {
         videoId={videoId}
         height={height}
         onHeightChange={setHeight}
+        embedUi={embedUi}
+        onEmbedUiChange={setEmbedUi}
         embedUrl={embedUrl}
         snippet={snippet}
         youtubeOfficialSnippet={youtubeOfficialSnippet}
@@ -89,6 +97,7 @@ export default function HomePage() {
       />
       <HomePreviews
         embedUrl={embedUrl}
+        embedUiLabel={embedUiLabel}
         youtubeOfficialEmbedUrl={youtubeOfficialEmbedUrl}
       />
     </HomePageShell>

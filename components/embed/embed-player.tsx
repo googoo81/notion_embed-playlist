@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { PlayerControls } from "@/components/embed/player-controls";
-import { PlayerDisc } from "@/components/embed/player-disc";
-import { PlayerTopBar } from "@/components/embed/player-top-bar";
+import { PlayerLayoutClassic } from "@/components/embed/player-layout-classic";
+import { PlayerLayoutIos } from "@/components/embed/player-layout-ios";
 import { loadYouTubeIframeApi } from "@/components/embed/youtube-iframe-api";
 import type { EmbedPlayerProps } from "@/types/embed-props";
 import type { YouTubePlayer, YouTubeVideoData } from "@/types/youtube";
@@ -35,6 +34,7 @@ export default function EmbedPlayer({
   videoId,
   autoplay = true,
   muted = false,
+  ui = "classic",
 }: EmbedPlayerProps) {
   const key = playlistId ?? videoId ?? "unknown";
   const hostId = useMemo(
@@ -175,6 +175,7 @@ export default function EmbedPlayer({
   }, []);
 
   useEffect(() => {
+    if (ui !== "classic") return;
     const el = scaleHostRef.current;
     if (!el) return;
 
@@ -197,7 +198,7 @@ export default function EmbedPlayer({
       ro.disconnect();
       window.removeEventListener("resize", updateScale);
     };
-  }, []);
+  }, [ui]);
 
   function togglePlayback(): void {
     const player = playerRef.current;
@@ -242,47 +243,33 @@ export default function EmbedPlayer({
     setCurrent(safe);
   }
 
-  return (
-    <div className="relative w-full overflow-hidden bg-transparent">
-      <div id={hostId} ref={hostRef} className="h-0 w-0 overflow-hidden" />
+  const viewProps = {
+    hostId,
+    hostRef,
+    scaleHostRef,
+    title,
+    author,
+    thumbnailUrl,
+    isPlaying,
+    progress,
+    current,
+    duration,
+    volume,
+    isMuted,
+    showVolume,
+    setShowVolume,
+    scale,
+    onSeek: seekToTime,
+    togglePlayback,
+    toggleMute,
+    applyVolume,
+    onPrev: () => playerRef.current?.previousVideo?.(),
+    onNext: () => playerRef.current?.nextVideo?.(),
+  };
 
-      <div ref={scaleHostRef} className="relative mx-auto w-full max-w-[760px]">
-        <div
-          className="relative"
-          style={{ height: `${DESIGN_HEIGHT * scale}px` }}
-        >
-          <div
-            className="absolute left-1/2 top-0"
-            style={{
-              width: `${DESIGN_WIDTH}px`,
-              transform: `translateX(-50%) scale(${scale})`,
-              transformOrigin: "top center",
-            }}
-          >
-            <PlayerTopBar
-              title={title}
-              author={author}
-              current={current}
-              duration={duration}
-              progress={progress}
-              onSeek={seekToTime}
-            />
-            <PlayerDisc thumbnailUrl={thumbnailUrl} isPlaying={isPlaying} />
-            <PlayerControls
-              isPlaying={isPlaying}
-              onTogglePlay={togglePlayback}
-              onPrev={() => playerRef.current?.previousVideo?.()}
-              onNext={() => playerRef.current?.nextVideo?.()}
-              showVolume={showVolume}
-              onToggleVolumePanel={() => setShowVolume((v) => !v)}
-              volume={volume}
-              onVolumeChange={applyVolume}
-              isMuted={isMuted}
-              onToggleMute={toggleMute}
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  if (ui === "ios") {
+    return <PlayerLayoutIos {...viewProps} />;
+  }
+
+  return <PlayerLayoutClassic {...viewProps} />;
 }

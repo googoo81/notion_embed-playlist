@@ -1,14 +1,22 @@
+import type { EmbedPlayerUi } from "@/lib/embed-ui";
+import { embedUiToSearchParam } from "@/lib/embed-ui";
+
 export type BuildEmbedUrlParams = {
   playlistId?: string;
   videoId?: string;
   autoplay?: boolean;
   muted?: boolean;
+  /** 플레이어 UI: 클래식(기본) / iOS 컨트롤 센터 스타일 */
+  embedUi?: EmbedPlayerUi;
 };
 
 /** 기본 iframe 스니펫 높이(px). 스니펫 문자열과 맞춰야 함. */
 const IFRAME_SNIPPET_DEFAULT_HEIGHT = 480;
 
-export function buildEmbedUrl(origin: string, params: BuildEmbedUrlParams): string {
+export function buildEmbedUrl(
+  origin: string,
+  params: BuildEmbedUrlParams,
+): string {
   const url = new URL("/embed", origin);
   if (params.playlistId) url.searchParams.set("list", params.playlistId);
   if (params.videoId) url.searchParams.set("v", params.videoId);
@@ -18,7 +26,8 @@ export function buildEmbedUrl(origin: string, params: BuildEmbedUrlParams): stri
   if (params.muted != null) {
     url.searchParams.set("muted", params.muted ? "1" : "0");
   }
-  url.searchParams.set("ui", "v3");
+  const ui = params.embedUi ?? "classic";
+  url.searchParams.set("ui", embedUiToSearchParam(ui));
   return url.toString();
 }
 

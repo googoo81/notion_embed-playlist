@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { EmbedPlayerUi } from "@/lib/embed-ui";
 
 export type HomeEmbedCardProps = {
   baseUrl: string;
@@ -13,6 +14,8 @@ export type HomeEmbedCardProps = {
   videoId: string | null;
   height: number;
   onHeightChange: (v: number) => void;
+  embedUi: EmbedPlayerUi;
+  onEmbedUiChange: (v: EmbedPlayerUi) => void;
   embedUrl: string;
   snippet: string;
   youtubeOfficialSnippet: string;
@@ -26,5 +29,6 @@ export type HomePageShellProps = {
 
 export type HomePreviewsProps = {
   embedUrl: string;
+  embedUiLabel: string;
   youtubeOfficialEmbedUrl: string;
 };

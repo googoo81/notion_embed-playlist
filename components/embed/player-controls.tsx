@@ -1,4 +1,9 @@
+import { TransportIcon } from "@/components/embed/transport-icon";
 import type { PlayerControlsProps } from "@/types/embed-props";
+
+/** public/assets/svg 가 흰색 fill이라 클래식 패널(밝은 배경)에서는 어둡게 보이게 처리 */
+const CLASSIC_TRANSPORT = "h-14 w-auto brightness-0 opacity-30";
+const CLASSIC_TRANSPORT_PLAY = "h-16 w-auto brightness-0 opacity-30";
 
 export function PlayerControls({
   isPlaying,
@@ -16,9 +21,7 @@ export function PlayerControls({
     <div className="relative z-[2] mt-[-18px] rounded-[26px] bg-white/85 px-8 py-8 backdrop-blur">
       <div className="mt-2 flex items-center justify-between pl-[248px] pr-10 text-black/30">
         <button type="button" onClick={onPrev} aria-label="이전" className="p-2">
-          <svg width="56" height="56" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M6 6h2v12H6V6zm3.5 6 10.5 6V6L9.5 12z" />
-          </svg>
+          <TransportIcon name="before" className={CLASSIC_TRANSPORT} />
         </button>
         <button
           type="button"
@@ -27,19 +30,13 @@ export function PlayerControls({
           className="p-2"
         >
           {isPlaying ? (
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M6 5h4v14H6V5zm8 0h4v14h-4V5z" />
-            </svg>
+            <TransportIcon name="stop" className={CLASSIC_TRANSPORT_PLAY} />
           ) : (
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M8 5v14l11-7L8 5z" />
-            </svg>
+            <TransportIcon name="play" className={CLASSIC_TRANSPORT_PLAY} />
           )}
         </button>
         <button type="button" onClick={onNext} aria-label="다음" className="p-2">
-          <svg width="56" height="56" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M16 6h2v12h-2V6zM4 18V6l10.5 6L4 18z" />
-          </svg>
+          <TransportIcon name="next" className={CLASSIC_TRANSPORT} />
         </button>
       </div>
 

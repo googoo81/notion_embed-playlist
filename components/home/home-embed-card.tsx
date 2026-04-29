@@ -5,8 +5,8 @@ import { FieldLabel } from "@/components/ui/field-label";
 import { StatTile } from "@/components/ui/stat-tile";
 import { TextInput } from "@/components/ui/text-input";
 import { UrlDisplay } from "@/components/ui/url-display";
-import type { HomeEmbedCardProps } from "@/types/home-props";
 import { NotionHintBanner } from "@/components/home/notion-hint-banner";
+import type { HomeEmbedCardProps } from "@/types/home-props";
 
 export function HomeEmbedCard({
   baseUrl,
@@ -21,6 +21,8 @@ export function HomeEmbedCard({
   videoId,
   height,
   onHeightChange,
+  embedUi,
+  onEmbedUiChange,
   embedUrl,
   snippet,
   youtubeOfficialSnippet,
@@ -40,9 +42,7 @@ export function HomeEmbedCard({
         />
       </div>
 
-      <FieldLabel className="mt-4">
-        유튜브 링크 (플레이리스트/영상)
-      </FieldLabel>
+      <FieldLabel className="mt-4">유튜브 링크 (플레이리스트/영상)</FieldLabel>
       <TextInput
         className="mt-2"
         value={input}
@@ -90,6 +90,31 @@ export function HomeEmbedCard({
         </div>
       </div>
 
+      <FieldLabel className="mt-4">커스텀 플레이어 디자인</FieldLabel>
+      <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+        임베드 URL의 <span className="font-mono">ui</span> 파라미터로 구분됩니다
+        (클래식: <span className="font-mono">v3</span>, iOS 스타일:{" "}
+        <span className="font-mono">ios</span>).
+      </p>
+      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+        <EmbedUiOption
+          id="embed-ui-classic"
+          name="embed-ui"
+          label="클래식"
+          description="노말 아트워크"
+          checked={embedUi === "classic"}
+          onSelect={() => onEmbedUiChange("classic")}
+        />
+        <EmbedUiOption
+          id="embed-ui-ios"
+          name="embed-ui"
+          label="iOS"
+          description="iOS 스타일 플레이어"
+          checked={embedUi === "ios"}
+          onSelect={() => onEmbedUiChange("ios")}
+        />
+      </div>
+
       <div className="mt-4">
         <div className="text-sm font-medium">커스텀 플레이어 임베드 URL</div>
         <UrlDisplay>
@@ -115,7 +140,11 @@ export function HomeEmbedCard({
       <div className="mt-4">
         <div className="flex items-center justify-between">
           <div className="text-sm font-medium">유튜브 iframe 코드</div>
-          <Button variant="outline" disabled={!youtubeOfficialSnippet} onClick={onCopyOfficial}>
+          <Button
+            variant="outline"
+            disabled={!youtubeOfficialSnippet}
+            onClick={onCopyOfficial}
+          >
             복사
           </Button>
         </div>
@@ -127,5 +156,47 @@ export function HomeEmbedCard({
         />
       </div>
     </section>
+  );
+}
+
+function EmbedUiOption({
+  id,
+  name,
+  label,
+  description,
+  checked,
+  onSelect,
+}: {
+  id: string;
+  name: string;
+  label: string;
+  description: string;
+  checked: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <label
+      htmlFor={id}
+      className={`flex cursor-pointer gap-3 rounded-xl border px-4 py-3 text-sm transition-colors dark:bg-zinc-900 ${
+        checked
+          ? "border-amber-400/80 bg-amber-50/80 dark:border-amber-500/50 dark:bg-amber-950/30"
+          : "border-zinc-200 bg-zinc-50 dark:border-zinc-800"
+      }`}
+    >
+      <input
+        id={id}
+        type="radio"
+        name={name}
+        checked={checked}
+        onChange={onSelect}
+        className="mt-0.5 h-4 w-4 shrink-0 accent-amber-400"
+      />
+      <span>
+        <span className="font-medium">{label}</span>
+        <span className="mt-0.5 block text-xs text-zinc-500 dark:text-zinc-400">
+          {description}
+        </span>
+      </span>
+    </label>
   );
 }

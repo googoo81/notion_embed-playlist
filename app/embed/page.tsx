@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import EmbedPlayer from "@/components/embed/embed-player";
+import { parseEmbedUiParam } from "@/lib/embed-ui";
 import {
   extractYouTubePlaylistId,
   extractYouTubeVideoId,
@@ -28,6 +29,7 @@ export default async function EmbedPage({ searchParams }: EmbedPageProps) {
   const vInput = getSearchParam(sp, "v") ?? "";
   const autoplay = parseBoolParam(getSearchParam(sp, "autoplay"), true);
   const muted = parseBoolParam(getSearchParam(sp, "muted"), false);
+  const embedUi = parseEmbedUiParam(getSearchParam(sp, "ui"));
 
   const playlistId = extractYouTubePlaylistId(listInput);
   const videoId = extractYouTubeVideoId(vInput);
@@ -60,6 +62,7 @@ export default async function EmbedPage({ searchParams }: EmbedPageProps) {
           videoId={videoId ?? undefined}
           autoplay={autoplay}
           muted={muted}
+          ui={embedUi}
         />
       </div>
     </>

@@ -1,8 +1,36 @@
+import type { Dispatch, RefObject, SetStateAction } from "react";
+import type { EmbedPlayerUi } from "@/lib/embed-ui";
+
 export type EmbedPlayerProps = {
   playlistId?: string;
   videoId?: string;
   autoplay?: boolean;
   muted?: boolean;
+  ui?: EmbedPlayerUi;
+};
+
+export type EmbedPlayerViewProps = {
+  hostId: string;
+  hostRef: RefObject<HTMLDivElement | null>;
+  scaleHostRef: RefObject<HTMLDivElement | null>;
+  title: string;
+  author: string;
+  thumbnailUrl: string;
+  isPlaying: boolean;
+  progress: number;
+  current: number;
+  duration: number;
+  volume: number;
+  isMuted: boolean;
+  showVolume: boolean;
+  setShowVolume: Dispatch<SetStateAction<boolean>>;
+  scale: number;
+  onSeek: (seconds: number) => void;
+  togglePlayback: () => void;
+  toggleMute: () => void;
+  applyVolume: (value: number) => void;
+  onPrev: () => void;
+  onNext: () => void;
 };
 
 export type PlayerTopBarProps = {
