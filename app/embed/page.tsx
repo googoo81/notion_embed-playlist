@@ -70,12 +70,21 @@ export default async function EmbedPage({ searchParams }: Props) {
   }
 
   return (
-    <EmbedPlayer
-      playlistId={playlistId ?? undefined}
-      videoId={videoId ?? undefined}
-      autoplay={autoplay}
-      muted={muted}
-    />
+    <>
+      <style>{`
+        html, body {
+          background: transparent !important;
+        }
+      `}</style>
+      <div className="flex min-h-screen w-full items-center justify-center">
+        <EmbedPlayer
+          playlistId={playlistId ?? undefined}
+          videoId={videoId ?? undefined}
+          autoplay={autoplay}
+          muted={muted}
+        />
+      </div>
+    </>
   );
 }
 

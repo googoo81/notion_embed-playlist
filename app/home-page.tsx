@@ -20,7 +20,7 @@ function buildEmbedUrl(
   if (params.muted != null)
     url.searchParams.set("muted", params.muted ? "1" : "0");
   // Bump when UI changes to avoid iframe cache showing stale layout
-  url.searchParams.set("ui", "v2");
+  url.searchParams.set("ui", "v3");
   return url.toString();
 }
 
@@ -269,7 +269,7 @@ export default function HomePage() {
             <div className="mb-2 text-sm font-medium">
               미리보기 (커스텀 플레이어)
             </div>
-            <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-black">
+            <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-black dark:border-zinc-800 dark:bg-blue-900">
               <iframe
                 key={embedUrl}
                 src={embedUrl}
@@ -286,7 +286,7 @@ export default function HomePage() {
             <div className="mb-2 text-sm font-medium">
               미리보기 (유튜브 기본 iframe)
             </div>
-            <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-black">
+            <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-blue-500 dark:border-zinc-800 dark:bg-blue-900">
               <iframe
                 key={youtubeOfficialEmbedUrl}
                 src={youtubeOfficialEmbedUrl}

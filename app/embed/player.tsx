@@ -254,14 +254,23 @@ export default function EmbedPlayer({
 
     const updateScale = () => {
       const hostWidth = el.clientWidth;
-      if (!hostWidth) return;
-      setScale(Math.min(1, hostWidth / DESIGN_WIDTH));
+      const viewportHeight =
+        typeof window === "undefined" ? DESIGN_HEIGHT : window.innerHeight;
+      if (!hostWidth || !viewportHeight) return;
+
+      const widthScale = hostWidth / DESIGN_WIDTH;
+      const heightScale = viewportHeight / DESIGN_HEIGHT;
+      setScale(Math.min(1, widthScale, heightScale));
     };
 
     updateScale();
     const ro = new ResizeObserver(updateScale);
     ro.observe(el);
-    return () => ro.disconnect();
+    window.addEventListener("resize", updateScale);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", updateScale);
+    };
   }, [DESIGN_WIDTH]);
 
   function toggle() {
@@ -391,7 +400,7 @@ export default function EmbedPlayer({
           </div>
 
           {/* Big control bar */}
-          <div className="relative z-[2] mt-[-18px] rounded-[26px] bg-transparent px-8 py-8">
+          <div className="relative z-[2] mt-[-18px] rounded-[26px] bg-white/85 px-8 py-8 backdrop-blur">
             <div className="mt-2 flex items-center justify-between pl-[248px] pr-10 text-black/30">
               <button
                 type="button"
@@ -454,10 +463,10 @@ export default function EmbedPlayer({
             <button
               type="button"
               onClick={() => setShowVolume((prev) => !prev)}
-              className="absolute bottom-[-8px] right-4 rounded-md px-2 py-1 text-lg font-medium text-black/40 hover:bg-black/5"
+              className="absolute bottom-2 right-4 rounded-md px-2 py-1 text-lg font-medium text-black/40 hover:bg-black/5"
               title="노션 자동재생 성공률을 위해 기본 음소거"
             >
-              {isMuted ? "Muted" : "Sound"} / Vol
+              {isMuted ? "Muted" : "Sound"} / Volume
             </button>
             {showVolume ? (
               <div className="absolute bottom-10 right-5 w-36 rounded-xl bg-white/90 px-3 py-2 shadow-sm">
