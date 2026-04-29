@@ -309,6 +309,14 @@ export default function EmbedPlayer({
     p?.nextVideo?.();
   }
 
+  function seekToTime(nextSeconds: number) {
+    const p = playerRef.current;
+    if (!p || !Number.isFinite(nextSeconds) || duration <= 0) return;
+    const safe = Math.max(0, Math.min(duration, nextSeconds));
+    p.seekTo?.(safe, true);
+    setCurrent(safe);
+  }
+
   return (
     <div className="relative w-full overflow-hidden bg-transparent">
       {/* Hidden YouTube player host */}
@@ -341,10 +349,21 @@ export default function EmbedPlayer({
               <span className="font-mono">{formatTime(current)}</span>
               <span className="font-mono">{formatTime(duration)}</span>
             </div>
-            <div className="mt-2 h-[6px] w-full rounded-full bg-[#ead9a6]">
+            <div className="relative mt-2 h-[6px] w-full rounded-full bg-[#ead9a6]">
               <div
                 className="h-[6px] rounded-full bg-[#f2b84b]"
                 style={{ width: `${progress * 100}%` }}
+              />
+              <input
+                type="range"
+                min={0}
+                max={duration > 0 ? duration : 0}
+                step={0.1}
+                value={duration > 0 ? current : 0}
+                onChange={(e) => seekToTime(Number(e.target.value))}
+                disabled={duration <= 0}
+                aria-label="재생 시간 조절"
+                className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
               />
             </div>
           </div>
@@ -435,7 +454,7 @@ export default function EmbedPlayer({
             <button
               type="button"
               onClick={() => setShowVolume((prev) => !prev)}
-              className="absolute bottom-4 right-5 text-xs font-medium text-black/35"
+              className="absolute bottom-[-8px] right-4 rounded-md px-2 py-1 text-lg font-medium text-black/40 hover:bg-black/5"
               title="노션 자동재생 성공률을 위해 기본 음소거"
             >
               {isMuted ? "Muted" : "Sound"} / Vol
