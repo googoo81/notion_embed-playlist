@@ -20,7 +20,12 @@ export function PlayerControls({
   return (
     <div className="relative z-[2] mt-[-18px] rounded-[26px] bg-white/85 px-8 py-8 backdrop-blur">
       <div className="mt-2 flex items-center justify-between pl-[248px] pr-10 text-black/30">
-        <button type="button" onClick={onPrev} aria-label="이전" className="p-1.5">
+        <button
+          type="button"
+          onClick={onPrev}
+          aria-label="이전"
+          className="p-1.5"
+        >
           <TransportIcon name="before" className={CLASSIC_TRANSPORT} />
         </button>
         <button
@@ -35,7 +40,12 @@ export function PlayerControls({
             <TransportIcon name="play" className={CLASSIC_TRANSPORT_PLAY} />
           )}
         </button>
-        <button type="button" onClick={onNext} aria-label="다음" className="p-2">
+        <button
+          type="button"
+          onClick={onNext}
+          aria-label="다음"
+          className="p-2"
+        >
           <TransportIcon name="next" className={CLASSIC_TRANSPORT} />
         </button>
       </div>

@@ -8,6 +8,8 @@ export type BuildEmbedUrlParams = {
   muted?: boolean;
   /** 플레이어 UI: 클래식(기본) / iOS 컨트롤 센터 스타일 */
   embedUi?: EmbedPlayerUi;
+  /** 우측 재생 목록 패널 (`plist=1`), 플레이리스트 임베드에서만 동작 */
+  playlistPanel?: boolean;
 };
 
 /** 기본 iframe 스니펫 높이(px). 스니펫 문자열과 맞춰야 함. */
@@ -28,6 +30,9 @@ export function buildEmbedUrl(
   }
   const ui = params.embedUi ?? "classic";
   url.searchParams.set("ui", embedUiToSearchParam(ui));
+  if (params.playlistPanel) {
+    url.searchParams.set("plist", "1");
+  }
   return url.toString();
 }
 

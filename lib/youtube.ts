@@ -2,7 +2,11 @@ export function extractYouTubePlaylistId(input: string): string | null {
   const raw = input.trim();
   if (!raw) return null;
 
-  if (/^[a-zA-Z0-9_-]{10,}$/.test(raw) && !raw.includes("/") && !raw.includes("?")) {
+  if (
+    /^[a-zA-Z0-9_-]{10,}$/.test(raw) &&
+    !raw.includes("/") &&
+    !raw.includes("?")
+  ) {
     return raw;
   }
 
@@ -24,7 +28,11 @@ export function extractYouTubeVideoId(input: string): string | null {
   const raw = input.trim();
   if (!raw) return null;
 
-  if (/^[a-zA-Z0-9_-]{11}$/.test(raw) && !raw.includes("/") && !raw.includes("?")) {
+  if (
+    /^[a-zA-Z0-9_-]{11}$/.test(raw) &&
+    !raw.includes("/") &&
+    !raw.includes("?")
+  ) {
     return raw;
   }
 

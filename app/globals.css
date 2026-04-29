@@ -26,6 +26,48 @@ body {
   font-family: "Nanum Gothic", ui-sans-serif, system-ui, sans-serif;
 }
 
+/* 스크롤 가능, 스크롤바만 숨김 — WebKit은 width 0 + thumb까지 투명 처리 */
+.scrollbar-hidden,
+.playlist-side-panel__scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hidden::-webkit-scrollbar,
+.playlist-side-panel__scroll::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent;
+}
+.scrollbar-hidden::-webkit-scrollbar-thumb,
+.playlist-side-panel__scroll::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+.scrollbar-hidden::-webkit-scrollbar-track,
+.playlist-side-panel__scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.playlist-side-panel__eq-bar {
+  transform-origin: bottom;
+  animation: playlist-eq 0.85s ease-in-out infinite;
+}
+.playlist-side-panel__eq-bar:nth-child(2) {
+  animation-delay: 0.14s;
+}
+.playlist-side-panel__eq-bar:nth-child(3) {
+  animation-delay: 0.28s;
+}
+
+@keyframes playlist-eq {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
 /* iOS embed 카드: 고정 디자인 폭(320px) + 컴포넌트에서 scale — 미디어쿼리로 흩어지지 않게 단일 값만 */
 .player-layout-ios__inner {
   padding: 1.25rem 1.25rem 2.5rem;

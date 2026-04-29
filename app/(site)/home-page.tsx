@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   buildEmbedUrl,
   buildIframeSnippet,
@@ -32,9 +32,14 @@ export default function HomePage() {
   const [autoplay, setAutoplay] = useState(true);
   const [muted, setMuted] = useState(false);
   const [embedUi, setEmbedUi] = useState<EmbedPlayerUi>("classic");
+  const [playlistPanel, setPlaylistPanel] = useState(false);
 
   const playlistId = extractYouTubePlaylistId(input);
   const videoId = extractYouTubeVideoId(input);
+
+  useEffect(() => {
+    if (!playlistId) setPlaylistPanel(false);
+  }, [playlistId]);
 
   const embedUrl =
     baseUrl && (playlistId || videoId)
@@ -44,6 +49,7 @@ export default function HomePage() {
           autoplay,
           muted,
           embedUi,
+          playlistPanel: playlistPanel && Boolean(playlistId),
         })
       : "";
 
@@ -89,6 +95,8 @@ export default function HomePage() {
         onHeightChange={setHeight}
         embedUi={embedUi}
         onEmbedUiChange={setEmbedUi}
+        playlistPanel={playlistPanel}
+        onPlaylistPanelChange={setPlaylistPanel}
         embedUrl={embedUrl}
         snippet={snippet}
         youtubeOfficialSnippet={youtubeOfficialSnippet}

@@ -30,6 +30,7 @@ export default async function EmbedPage({ searchParams }: EmbedPageProps) {
   const autoplay = parseBoolParam(getSearchParam(sp, "autoplay"), true);
   const muted = parseBoolParam(getSearchParam(sp, "muted"), false);
   const embedUi = parseEmbedUiParam(getSearchParam(sp, "ui"));
+  const showPlaylistPanel = parseBoolParam(getSearchParam(sp, "plist"), false);
 
   const playlistId = extractYouTubePlaylistId(listInput);
   const videoId = extractYouTubeVideoId(vInput);
@@ -60,13 +61,18 @@ export default async function EmbedPage({ searchParams }: EmbedPageProps) {
         }
       `}</style>
       <div className="box-border flex h-dvh max-h-dvh min-h-0 w-full max-w-[100vw] items-center justify-center overflow-hidden p-2 sm:p-3">
+      <div className="h-full min-h-0 w-full">
         <EmbedPlayer
           playlistId={playlistId ?? undefined}
           videoId={videoId ?? undefined}
           autoplay={autoplay}
           muted={muted}
           ui={embedUi}
+          showPlaylistPanel={
+            showPlaylistPanel && Boolean(playlistId)
+          }
         />
+      </div>
       </div>
     </>
   );

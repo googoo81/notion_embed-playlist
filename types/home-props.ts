@@ -16,6 +16,8 @@ export type HomeEmbedCardProps = {
   onHeightChange: (v: number) => void;
   embedUi: EmbedPlayerUi;
   onEmbedUiChange: (v: EmbedPlayerUi) => void;
+  playlistPanel: boolean;
+  onPlaylistPanelChange: (v: boolean) => void;
   embedUrl: string;
   snippet: string;
   youtubeOfficialSnippet: string;

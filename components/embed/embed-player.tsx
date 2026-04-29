@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { PlayerLayoutClassic } from "@/components/embed/player-layout-classic";
 import { PlayerLayoutIos } from "@/components/embed/player-layout-ios";
+import { PlaylistSidePanel } from "@/components/embed/playlist-side-panel";
 import { loadYouTubeIframeApi } from "@/components/embed/youtube-iframe-api";
+import { isYoutubeAtomPlaylistFeedSupported } from "@/lib/youtube-playlist-feed";
 import type { EmbedPlayerProps } from "@/types/embed-props";
 import type { YouTubePlayer, YouTubeVideoData } from "@/types/youtube";
 
@@ -35,6 +37,7 @@ export default function EmbedPlayer({
   autoplay = true,
   muted = false,
   ui = "classic",
+  showPlaylistPanel = false,
 }: EmbedPlayerProps) {
   const key = playlistId ?? videoId ?? "unknown";
   const hostId = useMemo(
@@ -55,7 +58,12 @@ export default function EmbedPlayer({
   const [duration, setDuration] = useState(0);
   const [current, setCurrent] = useState(0);
   const [scale, setScale] = useState(1);
+  const [currentVideoId, setCurrentVideoId] = useState("");
   const scaleHostRef = useRef<HTMLDivElement | null>(null);
+  const playerMeasureRef = useRef<HTMLDivElement | null>(null);
+  const [playlistPanelHeightPx, setPlaylistPanelHeightPx] = useState<
+    number | null
+  >(null);
 
   const progress =
     duration > 0 ? Math.min(1, Math.max(0, current / duration)) : 0;
@@ -116,6 +124,8 @@ export default function EmbedPlayer({
               setAuthor,
               setThumbnailUrl,
             });
+            const vid = player.getVideoData?.()?.video_id;
+            if (vid) setCurrentVideoId(vid);
           },
           onStateChange: (event) => {
             const state = event?.data;
@@ -133,6 +143,8 @@ export default function EmbedPlayer({
             if (typeof d === "number" && Number.isFinite(d) && d > 0) {
               setDuration(d);
             }
+            const vid = player?.getVideoData?.()?.video_id;
+            if (vid) setCurrentVideoId(vid);
           },
         },
       });
@@ -184,10 +196,7 @@ export default function EmbedPlayer({
       const viewportHeight =
         typeof window === "undefined"
           ? DESIGN_HEIGHT
-          : Math.max(
-              1,
-              window.visualViewport?.height ?? window.innerHeight,
-            );
+          : Math.max(1, window.visualViewport?.height ?? window.innerHeight);
       if (!hostWidth || !viewportHeight) return;
 
       const widthScale = hostWidth / DESIGN_WIDTH;
@@ -206,6 +215,35 @@ export default function EmbedPlayer({
       window.visualViewport?.removeEventListener("resize", updateScale);
     };
   }, [ui]);
+
+  useLayoutEffect(() => {
+    if (!showPlaylistPanel || !playlistId) {
+      setPlaylistPanelHeightPx(null);
+      return;
+    }
+
+    const el = playerMeasureRef.current;
+    if (!el) return;
+
+    const apply = (): void => {
+      const h = el.getBoundingClientRect().height;
+      if (h > 0) setPlaylistPanelHeightPx(h);
+    };
+
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+    };
+  }, [
+    showPlaylistPanel,
+    playlistId,
+    ui,
+    title,
+    author,
+    thumbnailUrl,
+  ]);
 
   function togglePlayback(): void {
     const player = playerRef.current;
@@ -274,9 +312,37 @@ export default function EmbedPlayer({
     onNext: () => playerRef.current?.nextVideo?.(),
   };
 
-  if (ui === "ios") {
-    return <PlayerLayoutIos {...viewProps} />;
+  const playerUi =
+    ui === "ios" ? (
+      <PlayerLayoutIos {...viewProps} />
+    ) : (
+      <PlayerLayoutClassic {...viewProps} />
+    );
+
+  if (showPlaylistPanel && playlistId) {
+    return (
+      <div className="flex h-full min-h-0 w-full flex-row items-center justify-center gap-2">
+        <div
+          ref={playerMeasureRef}
+          className="flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-hidden"
+        >
+          {playerUi}
+        </div>
+        <PlaylistSidePanel
+          playlistId={playlistId}
+          playerRef={playerRef}
+          currentVideoId={currentVideoId}
+          atomFeedSupported={isYoutubeAtomPlaylistFeedSupported(playlistId)}
+          currentTitle={title}
+          panelHeightPx={playlistPanelHeightPx}
+        />
+      </div>
+    );
   }
 
-  return <PlayerLayoutClassic {...viewProps} />;
+  return (
+    <div className="flex h-full min-h-0 w-full items-center justify-center">
+      {playerUi}
+    </div>
+  );
 }

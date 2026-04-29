@@ -34,9 +34,12 @@ export function PlayerLayoutIos({
   const layoutKey = useMemo(() => {
     const sub = author || title || "YouTube";
     const twoLineTitle = Boolean(title && title !== sub);
-    return [title, author ?? "", thumbnailUrl ?? "", twoLineTitle ? "1" : "0"].join(
-      "\u0000",
-    );
+    return [
+      title,
+      author ?? "",
+      thumbnailUrl ?? "",
+      twoLineTitle ? "1" : "0",
+    ].join("\u0000");
   }, [title, author, thumbnailUrl]);
 
   return (

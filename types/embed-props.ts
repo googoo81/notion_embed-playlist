@@ -7,6 +7,8 @@ export type EmbedPlayerProps = {
   autoplay?: boolean;
   muted?: boolean;
   ui?: EmbedPlayerUi;
+  /** `?plist=1` — 플레이리스트가 있을 때 우측 목록 패널 */
+  showPlaylistPanel?: boolean;
 };
 
 export type EmbedPlayerViewProps = {

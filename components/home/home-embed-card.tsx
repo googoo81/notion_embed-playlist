@@ -23,6 +23,8 @@ export function HomeEmbedCard({
   onHeightChange,
   embedUi,
   onEmbedUiChange,
+  playlistPanel,
+  onPlaylistPanelChange,
   embedUrl,
   snippet,
   youtubeOfficialSnippet,
@@ -61,6 +63,22 @@ export function HomeEmbedCard({
           checked={muted}
           onChange={(e) => onMutedChange(e.target.checked)}
         />
+      </div>
+
+      <div className="mt-3 space-y-1">
+        <CheckboxRow
+          label="우측 플레이리스트 목록"
+          checked={playlistPanel}
+          onChange={(e) => onPlaylistPanelChange(e.target.checked)}
+          disabled={!playlistId}
+          className={!playlistId ? "opacity-60" : ""}
+        />
+        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          URL에 <span className="font-mono">plist=1</span> 이 붙습니다. 플레이리스트
+          임베드에서만 동작하고, 노션·미리보기는 가로를 넉넉히 잡는 편이 좋습니다. Mix(
+          <span className="font-mono">RD…</span>)는 공개 피드가 없어 우측 목록이 플레이어
+          API로 채워집니다.
+        </p>
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
