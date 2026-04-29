@@ -40,7 +40,7 @@ export function PlayerLayoutIos({
   }, [title, author, thumbnailUrl]);
 
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center p-2">
+    <div className="flex min-h-0 w-full items-center justify-center">
       <div id={hostId} ref={hostRef} className="h-0 w-0 overflow-hidden" />
 
       <IosUniformScaleShell layoutKey={layoutKey}>
