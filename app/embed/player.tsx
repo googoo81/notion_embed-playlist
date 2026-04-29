@@ -329,11 +329,11 @@ export default function EmbedPlayer({
           >
           {/* Top info bar */}
           <div className="relative z-[1] mx-auto w-[95%] rounded-[22px] bg-[#f7f2e7] px-6 py-6 pl-[248px]">
-            <div className="text-[34px] font-semibold tracking-tight text-[#2a2a2a]">
-              {author || "YouTube"}
+            <div className="truncate whitespace-nowrap text-[34px] font-semibold tracking-tight text-[#2a2a2a]">
+              {title || "YouTube"}
             </div>
-            <div className="mt-1 text-[18px] font-medium text-[#b7b7b7]">
-              {title}
+            <div className="mt-1 truncate whitespace-nowrap text-[18px] font-medium text-[#b7b7b7]">
+              {author || "YouTube"}
             </div>
 
             {/* time + thin progress */}
