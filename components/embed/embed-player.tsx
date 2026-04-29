@@ -182,7 +182,12 @@ export default function EmbedPlayer({
     const updateScale = (): void => {
       const hostWidth = el.clientWidth;
       const viewportHeight =
-        typeof window === "undefined" ? DESIGN_HEIGHT : window.innerHeight;
+        typeof window === "undefined"
+          ? DESIGN_HEIGHT
+          : Math.max(
+              1,
+              window.visualViewport?.height ?? window.innerHeight,
+            );
       if (!hostWidth || !viewportHeight) return;
 
       const widthScale = hostWidth / DESIGN_WIDTH;
@@ -194,9 +199,11 @@ export default function EmbedPlayer({
     const ro = new ResizeObserver(updateScale);
     ro.observe(el);
     window.addEventListener("resize", updateScale);
+    window.visualViewport?.addEventListener("resize", updateScale);
     return () => {
       ro.disconnect();
       window.removeEventListener("resize", updateScale);
+      window.visualViewport?.removeEventListener("resize", updateScale);
     };
   }, [ui]);
 

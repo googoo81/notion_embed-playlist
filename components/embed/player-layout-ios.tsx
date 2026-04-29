@@ -28,10 +28,10 @@ export function PlayerLayoutIos({
   const hasRealThumbnail = Boolean(thumbnailUrl?.trim());
 
   return (
-    <div className="relative flex w-full flex-col items-center px-3 py-4">
+    <div className="player-layout-ios relative flex max-h-[100dvh] min-h-0 w-full flex-col items-center justify-center px-3">
       <div id={hostId} ref={hostRef} className="h-0 w-0 overflow-hidden" />
 
-      <div className="relative w-full max-w-[320px] overflow-hidden rounded-[44px] shadow-2xl ring-1 ring-white/10">
+      <div className="player-layout-ios__card relative w-full max-w-[320px] min-w-0 overflow-hidden rounded-[44px] ring-1 ring-white/10">
         {/* 유튜브 썸네일 확대 + 블러 = 잠금화면/컨트롤센터 배경 느낌 */}
         <div
           aria-hidden
@@ -42,8 +42,8 @@ export function PlayerLayoutIos({
           aria-hidden
           className={`absolute inset-0 ${hasRealThumbnail ? "bg-black/45" : "bg-[#6d6d70]"}`}
         />
-        <div className="relative z-10 px-5 pt-5 pb-10">
-          <div className="aspect-square w-full overflow-hidden rounded-[22px] bg-black">
+        <div className="player-layout-ios__inner relative z-10 min-w-0">
+          <div className="player-layout-ios__art mx-auto aspect-square w-[min(100%,320px,calc(100dvh-14rem))] overflow-hidden rounded-[22px] bg-black">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={artSrc}
@@ -55,29 +55,29 @@ export function PlayerLayoutIos({
 
           {title && title !== subtitle ? (
             <>
-              <div className="mt-5">
+              <div className="player-layout-ios__title-gap">
                 <IosMarqueeText
                   text={title}
-                  className="text-lg font-bold tracking-wide text-white/95"
+                  className="player-layout-ios__marq-title text-left"
                 />
               </div>
               <div className="mt-0.5">
                 <IosMarqueeText
                   text={subtitle}
-                  className="text-sm font-medium text-white/70"
+                  className="player-layout-ios__marq-sub text-left"
                 />
               </div>
             </>
           ) : (
-            <div className="mt-5">
+            <div className="player-layout-ios__subtitle-single-gap">
               <IosMarqueeText
                 text={subtitle}
-                className="text-lg font-bold tracking-wide text-white/95"
+                className="player-layout-ios__marq-title text-left"
               />
             </div>
           )}
 
-          <div className="mt-4">
+          <div className="player-layout-ios__after-art-gap">
             <div className="relative h-2 w-full rounded-full bg-white/25">
               <div
                 className="h-2 rounded-full bg-white"
@@ -97,7 +97,7 @@ export function PlayerLayoutIos({
             </div>
           </div>
 
-          <div className="mt-5 flex items-center justify-center gap-8 text-white">
+          <div className="player-layout-ios__transport flex items-center justify-center text-white">
             <button
               type="button"
               onClick={onPrev}
@@ -128,7 +128,7 @@ export function PlayerLayoutIos({
             </button>
           </div>
 
-          <div className="mt-6 flex items-center gap-3 text-white/95">
+          <div className="player-layout-ios__volume-row flex items-center gap-3 text-white/95">
             <span className="shrink-0 opacity-90">
               <VolumeIcon name="mute" className="h-[13px] w-auto" />
             </span>
@@ -158,7 +158,6 @@ export function PlayerLayoutIos({
               <VolumeIcon name="full" className="h-[17px] w-auto" />
             </span>
           </div>
-
         </div>
       </div>
     </div>

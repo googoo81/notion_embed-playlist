@@ -56,7 +56,7 @@ export default async function EmbedPage({ searchParams }: EmbedPageProps) {
           background: transparent !important;
         }
       `}</style>
-      <div className="flex min-h-screen w-full items-center justify-center">
+      <div className="box-border flex min-h-[100dvh] w-full max-w-[100vw] items-center justify-center overflow-x-hidden overflow-y-hidden p-2 sm:p-3">
         <EmbedPlayer
           playlistId={playlistId ?? undefined}
           videoId={videoId ?? undefined}
