@@ -337,11 +337,11 @@ export default function EmbedPlayer({
       <div ref={scaleHostRef} className="relative mx-auto w-full max-w-[760px]">
         <div className="relative" style={{ height: `${DESIGN_HEIGHT * scale}px` }}>
           <div
-            className="absolute left-0 top-0"
+            className="absolute left-1/2 top-0"
             style={{
               width: `${DESIGN_WIDTH}px`,
-              transform: `scale(${scale})`,
-              transformOrigin: "top left",
+              transform: `translateX(-50%) scale(${scale})`,
+              transformOrigin: "top center",
             }}
           >
           {/* Top info bar */}
