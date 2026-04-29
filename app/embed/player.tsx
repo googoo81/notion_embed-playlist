@@ -362,7 +362,7 @@ export default function EmbedPlayer({
                   alt=""
                   referrerPolicy="no-referrer"
                   className={[
-                    "h-full w-full object-cover",
+                    "h-full w-full scale-135 object-cover object-center",
                     isPlaying ? "animate-[spin_3s_linear_infinite]" : "",
                   ].join(" ")}
                 />
