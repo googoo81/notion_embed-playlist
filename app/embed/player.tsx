@@ -391,7 +391,7 @@ export default function EmbedPlayer({
           </div>
 
           {/* Big control bar */}
-          <div className="relative z-[2] mt-[-18px] rounded-[26px] bg-white/85 px-8 py-8 backdrop-blur">
+          <div className="relative z-[2] mt-[-18px] rounded-[26px] bg-transparent px-8 py-8">
             <div className="mt-2 flex items-center justify-between pl-[248px] pr-10 text-black/30">
               <button
                 type="button"
