@@ -154,15 +154,15 @@ export function PlayerLayoutIos({
                 />
                 <div
                   aria-hidden
-                  className="pointer-events-none absolute left-0 top-1/2 h-1 max-w-full -translate-y-1/2 rounded-full bg-white"
-                  style={{ width: `${isMuted ? 0 : volume}%` }}
+                  className={`pointer-events-none absolute left-0 top-1/2 h-1 max-w-full -translate-y-1/2 rounded-full bg-white ${isMuted ? "opacity-40" : ""}`}
+                  style={{ width: `${volume}%` }}
                 />
                 <input
                   type="range"
                   min={0}
                   max={100}
                   step={1}
-                  value={isMuted ? 0 : volume}
+                  value={volume}
                   onInput={(e) => applyVolume(Number(e.currentTarget.value))}
                   onChange={(e) => applyVolume(Number(e.currentTarget.value))}
                   aria-label="볼륨"

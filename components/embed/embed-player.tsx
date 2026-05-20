@@ -139,6 +139,14 @@ export default function EmbedPlayer({
 
             const player = playerRef.current;
             if (player?.isMuted) setIsMuted(Boolean(player.isMuted()));
+            const reported = player?.getVolume?.();
+            if (
+              typeof reported === "number" &&
+              Number.isFinite(reported) &&
+              reported > 0
+            ) {
+              setVolume(reported);
+            }
             applyVideoDataToUi(player?.getVideoData?.(), {
               setTitle,
               setAuthor,
@@ -273,22 +281,17 @@ export default function EmbedPlayer({
     const player = playerRef.current;
     if (!player) return;
     const state = player.getPlayerState?.();
-    if (state === 1) {
-      player.pauseVideo?.();
-      return;
-    }
-    // 중첩 iframe(노션 웹)에서는 음소거 후 playVideo가 성공하는 경우가 많음
-    if (!player.isMuted?.()) {
-      player.mute?.();
-      setIsMuted(true);
-    }
-    player.playVideo?.();
+    if (state === 1) player.pauseVideo?.();
+    else player.playVideo?.();
   }
 
   function toggleMute(): void {
     const player = playerRef.current;
     if (!player) return;
     if (player.isMuted?.()) {
+      const restore = volume > 0 ? volume : DEFAULT_VOLUME;
+      player.setVolume?.(restore);
+      setVolume(restore);
       player.unMute?.();
       setIsMuted(false);
     } else {
@@ -302,11 +305,16 @@ export default function EmbedPlayer({
     setVolume(safe);
     const player = playerRef.current;
     if (!player) return;
-    player.setVolume?.(safe);
+
     if (safe === 0) {
+      player.setVolume?.(0);
       player.mute?.();
       setIsMuted(true);
-    } else if (player.isMuted?.()) {
+      return;
+    }
+
+    player.setVolume?.(safe);
+    if (player.isMuted?.()) {
       player.unMute?.();
       setIsMuted(false);
     }
