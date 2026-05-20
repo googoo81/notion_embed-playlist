@@ -2,9 +2,7 @@
 
 import type { RefObject } from "react";
 import type { YouTubePlayer } from "@/types/youtube";
-import {
-  IOS_UNIFORM_DESIGN_WIDTH_PX,
-} from "@/components/embed/ios-uniform-scale-shell";
+import { IOS_UNIFORM_DESIGN_WIDTH_PX } from "@/components/embed/ios-uniform-scale-shell";
 import { PlaylistPlayingIndicator } from "@/components/embed/playlist-playing-indicator";
 import { resolvePlaylistQueueRowLabels } from "@/lib/playlist-queue-row-labels";
 import {
@@ -18,13 +16,9 @@ type PlaylistSidePanelProps = {
   playlistId: string;
   playerRef: RefObject<YouTubePlayer | null>;
   currentVideoId: string;
-  /** Mix(RD) 등 Atom 피드 미지원 목록은 플레이어 API로 채움 */
   atomFeedSupported: boolean;
-  /** 현재 곡 제목 — 재생 중인 행에만 표시 */
   currentTitle: string;
-  /** 현재 곡 채널(업로더) — 재생 중인 행에 우선 표시 */
   currentAuthor: string;
-  /** 플레이어 블록과 같은 표시 크기(px) — iOS는 스케일 박스와 동일 */
   panelFramePx?: { width: number; height: number } | null;
 };
 
@@ -47,8 +41,10 @@ export function PlaylistSidePanel({
     panelFramePx.width > 0 &&
     panelFramePx.height > 0;
 
-  const { scale: iosQueueScale, designViewportHeightPx: iosQueueDesignViewportHeightPx } =
-    useIosQueuePanelMetrics(frameLocked, panelFramePx ?? null);
+  const {
+    scale: iosQueueScale,
+    designViewportHeightPx: iosQueueDesignViewportHeightPx,
+  } = useIosQueuePanelMetrics(frameLocked, panelFramePx ?? null);
 
   const iosCardBgSrc = currentVideoId.trim()
     ? youtubeVideoThumbnailMqUrl(currentVideoId)
