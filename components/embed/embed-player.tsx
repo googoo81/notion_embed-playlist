@@ -91,7 +91,6 @@ export default function EmbedPlayer({
         width: "0",
         playerVars: {
           autoplay: autoplay ? 1 : 0,
-          mute: muted ? 1 : 0,
           controls: 0,
           modestbranding: 1,
           rel: 0,
@@ -139,14 +138,6 @@ export default function EmbedPlayer({
 
             const player = playerRef.current;
             if (player?.isMuted) setIsMuted(Boolean(player.isMuted()));
-            const reported = player?.getVolume?.();
-            if (
-              typeof reported === "number" &&
-              Number.isFinite(reported) &&
-              reported > 0
-            ) {
-              setVolume(reported);
-            }
             applyVideoDataToUi(player?.getVideoData?.(), {
               setTitle,
               setAuthor,
@@ -289,9 +280,6 @@ export default function EmbedPlayer({
     const player = playerRef.current;
     if (!player) return;
     if (player.isMuted?.()) {
-      const restore = volume > 0 ? volume : DEFAULT_VOLUME;
-      player.setVolume?.(restore);
-      setVolume(restore);
       player.unMute?.();
       setIsMuted(false);
     } else {
@@ -305,16 +293,11 @@ export default function EmbedPlayer({
     setVolume(safe);
     const player = playerRef.current;
     if (!player) return;
-
+    player.setVolume?.(safe);
     if (safe === 0) {
-      player.setVolume?.(0);
       player.mute?.();
       setIsMuted(true);
-      return;
-    }
-
-    player.setVolume?.(safe);
-    if (player.isMuted?.()) {
+    } else if (player.isMuted?.()) {
       player.unMute?.();
       setIsMuted(false);
     }

@@ -2,7 +2,6 @@
 
 import { useMemo } from "react";
 import type { EmbedPlayerViewProps } from "@/types/embed-props";
-import { YoutubePlayerHost } from "@/components/embed/youtube-player-host";
 import { IosMarqueeText } from "@/components/embed/ios-marquee-text";
 import { IosUniformScaleShell } from "@/components/embed/ios-uniform-scale-shell";
 import { TransportIcon, VolumeIcon } from "@/components/embed/transport-icon";
@@ -44,7 +43,7 @@ export function PlayerLayoutIos({
 
   return (
     <div className="flex min-h-0 w-full items-center justify-center">
-      <YoutubePlayerHost id={hostId} hostRef={hostRef} />
+      <div id={hostId} ref={hostRef} className="h-0 w-0 overflow-hidden" />
 
       <IosUniformScaleShell layoutKey={layoutKey} outerBoxRef={iosShellOuterRef}>
         <div className="player-layout-ios__card relative w-full overflow-hidden rounded-[44px] ring-1 ring-white/10">
@@ -154,15 +153,15 @@ export function PlayerLayoutIos({
                 />
                 <div
                   aria-hidden
-                  className={`pointer-events-none absolute left-0 top-1/2 h-1 max-w-full -translate-y-1/2 rounded-full bg-white ${isMuted ? "opacity-40" : ""}`}
-                  style={{ width: `${volume}%` }}
+                  className="pointer-events-none absolute left-0 top-1/2 h-1 max-w-full -translate-y-1/2 rounded-full bg-white"
+                  style={{ width: `${isMuted ? 0 : volume}%` }}
                 />
                 <input
                   type="range"
                   min={0}
                   max={100}
                   step={1}
-                  value={volume}
+                  value={isMuted ? 0 : volume}
                   onInput={(e) => applyVolume(Number(e.currentTarget.value))}
                   onChange={(e) => applyVolume(Number(e.currentTarget.value))}
                   aria-label="볼륨"
