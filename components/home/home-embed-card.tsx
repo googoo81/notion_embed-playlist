@@ -45,7 +45,7 @@ export function HomeEmbedCard({
         <TextInput
           value={baseUrl}
           onChange={(e) => onBaseUrlChange(e.target.value)}
-          placeholder="예: https://notion-embed-playlist.vercel.app"
+          placeholder="예: https://your-app.vercel.app"
         />
       </div>
 

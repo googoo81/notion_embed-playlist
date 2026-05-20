@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   buildEmbedUrl,
   buildIframeSnippet,
   buildYouTubeOfficialEmbedUrl,
+  resolveInitialAppOrigin,
 } from "@/lib/embed";
 import { generateEmbedSyncKey } from "@/lib/embed-sync";
 import type { EmbedPlayerUi } from "@/lib/embed-ui";
@@ -16,18 +17,15 @@ import { HomeEmbedCard } from "@/components/home/home-embed-card";
 import { HomeHeader } from "@/components/home/home-header";
 import { HomePageShell } from "@/components/home/home-page-shell";
 import { HomePreviews } from "@/components/home/home-previews";
+type HomePageProps = {
+  /** 서버에서 추출한 현재 요청 origin (`NEXT_PUBLIC_APP_URL` 없을 때) */
+  requestOrigin?: string;
+};
 
-const PRODUCTION_BASE_URL = "https://notion-embed-playlist.vercel.app";
-const DEVELOPMENT_BASE_URL = "http://localhost:3000";
-
-function getDefaultBaseUrl(): string {
-  return process.env.NODE_ENV === "development"
-    ? DEVELOPMENT_BASE_URL
-    : PRODUCTION_BASE_URL;
-}
-
-export default function HomePage() {
-  const [baseUrl, setBaseUrl] = useState(getDefaultBaseUrl);
+export default function HomePage({ requestOrigin }: HomePageProps) {
+  const [baseUrl, setBaseUrl] = useState(() =>
+    resolveInitialAppOrigin(requestOrigin),
+  );
   const [input, setInput] = useState("");
   const [height, setHeight] = useState(480);
   const [autoplay, setAutoplay] = useState(true);
@@ -40,20 +38,10 @@ export default function HomePage() {
   const playlistId = extractYouTubePlaylistId(input);
   const videoId = extractYouTubeVideoId(input);
 
-  useEffect(() => {
-    if (!playlistId) {
-      setPlaylistPanel(false);
-      setPlaylistSplitIframe(false);
-      setSplitSyncKey(null);
-    }
-  }, [playlistId]);
-
-  useEffect(() => {
-    if (!playlistPanel) {
-      setPlaylistSplitIframe(false);
-      setSplitSyncKey(null);
-    }
-  }, [playlistPanel]);
+  const playlistPanelActive = Boolean(playlistId) && playlistPanel;
+  const playlistSplitActive =
+    playlistPanelActive && playlistSplitIframe;
+  const activeSplitSyncKey = playlistSplitActive ? splitSyncKey : null;
 
   function handlePlaylistSplitChange(checked: boolean): void {
     setPlaylistSplitIframe(checked);
@@ -66,9 +54,8 @@ export default function HomePage() {
 
   const splitActive =
     Boolean(playlistId) &&
-    playlistPanel &&
-    playlistSplitIframe &&
-    Boolean(splitSyncKey);
+    playlistSplitActive &&
+    Boolean(activeSplitSyncKey);
 
   const embedUrl =
     baseUrl && (playlistId || videoId)
@@ -78,12 +65,11 @@ export default function HomePage() {
           autoplay,
           muted,
           embedUi,
-          playlistPanel:
-            playlistPanel && Boolean(playlistId) && !playlistSplitIframe,
+          playlistPanel: playlistPanelActive && !playlistSplitActive,
           ...(splitActive
             ? {
                 embedPart: "player" as const,
-                syncKey: splitSyncKey!,
+                syncKey: activeSplitSyncKey!,
               }
             : {}),
         })
@@ -99,7 +85,7 @@ export default function HomePage() {
           embedUi,
           playlistPanel: false,
           embedPart: "queue",
-          syncKey: splitSyncKey!,
+          syncKey: activeSplitSyncKey!,
         })
       : "";
 
@@ -153,9 +139,9 @@ export default function HomePage() {
         onHeightChange={setHeight}
         embedUi={embedUi}
         onEmbedUiChange={setEmbedUi}
-        playlistPanel={playlistPanel}
+        playlistPanel={playlistPanelActive}
         onPlaylistPanelChange={setPlaylistPanel}
-        playlistSplitIframe={playlistSplitIframe}
+        playlistSplitIframe={playlistSplitActive}
         onPlaylistSplitIframeChange={handlePlaylistSplitChange}
         embedUrl={embedUrl}
         embedQueueUrl={embedQueueUrl}

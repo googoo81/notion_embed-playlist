@@ -1,6 +1,46 @@
 import type { EmbedPlayerUi } from "@/lib/embed-ui";
 import { embedUiToSearchParam } from "@/lib/embed-ui";
 
+const DEV_DEFAULT_ORIGIN = "http://localhost:3000";
+
+/** trailing slash 제거, 유효한 origin만 반환 */
+export function normalizeAppOrigin(raw: string): string | undefined {
+  const trimmed = raw.trim();
+  if (!trimmed) return undefined;
+  try {
+    const withScheme = /^https?:\/\//i.test(trimmed)
+      ? trimmed
+      : `https://${trimmed}`;
+    return new URL(withScheme).origin;
+  } catch {
+    return undefined;
+  }
+}
+
+/** `NEXT_PUBLIC_APP_URL` (next.config에서 VERCEL_URL로 채울 수 있음) */
+export function getConfiguredAppOrigin(): string | undefined {
+  return normalizeAppOrigin(process.env.NEXT_PUBLIC_APP_URL ?? "");
+}
+
+/** 요청 헤더에서 origin 추출 (App Router 서버 컴포넌트) */
+export function originFromRequestHeaders(
+  host: string | null,
+  proto: string | null,
+): string | undefined {
+  if (!host?.trim()) return undefined;
+  const scheme = proto?.trim().toLowerCase() === "http" ? "http" : "https";
+  return normalizeAppOrigin(`${scheme}://${host.trim()}`);
+}
+
+/** 홈 베이스 URL 초기값: env > 현재 요청 origin > 로컬 dev */
+export function resolveInitialAppOrigin(requestOrigin?: string): string {
+  const configured = getConfiguredAppOrigin();
+  if (configured) return configured;
+  if (requestOrigin) return requestOrigin;
+  if (process.env.NODE_ENV === "development") return DEV_DEFAULT_ORIGIN;
+  return "";
+}
+
 export type BuildEmbedUrlParams = {
   playlistId?: string;
   videoId?: string;
