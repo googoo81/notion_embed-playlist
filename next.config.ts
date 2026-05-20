@@ -13,6 +13,19 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_APP_URL: resolvePublicAppUrl(),
   },
+  async headers() {
+    return [
+      {
+        source: "/embed",
+        headers: [
+          {
+            key: "Permissions-Policy",
+            value: "autoplay=(self), encrypted-media=(self), fullscreen=(self)",
+          },
+        ],
+      },
+    ];
+  },
   turbopack: {
     root: process.cwd(),
   },

@@ -1,6 +1,7 @@
 import { PlayerControls } from "@/components/embed/player-controls";
 import { PlayerDisc } from "@/components/embed/player-disc";
 import { PlayerTopBar } from "@/components/embed/player-top-bar";
+import { YoutubePlayerHost } from "@/components/embed/youtube-player-host";
 import type { EmbedPlayerViewProps } from "@/types/embed-props";
 
 const DESIGN_WIDTH = 760;
@@ -32,7 +33,7 @@ export function PlayerLayoutClassic({
 }: EmbedPlayerViewProps) {
   return (
     <div className="relative w-full overflow-hidden bg-transparent">
-      <div id={hostId} ref={hostRef} className="h-0 w-0 overflow-hidden" />
+      <YoutubePlayerHost id={hostId} hostRef={hostRef} />
 
       <div ref={scaleHostRef} className="relative mx-auto w-full max-w-[760px]">
         <div

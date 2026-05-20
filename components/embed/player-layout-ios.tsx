@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import type { EmbedPlayerViewProps } from "@/types/embed-props";
+import { YoutubePlayerHost } from "@/components/embed/youtube-player-host";
 import { IosMarqueeText } from "@/components/embed/ios-marquee-text";
 import { IosUniformScaleShell } from "@/components/embed/ios-uniform-scale-shell";
 import { TransportIcon, VolumeIcon } from "@/components/embed/transport-icon";
@@ -43,7 +44,7 @@ export function PlayerLayoutIos({
 
   return (
     <div className="flex min-h-0 w-full items-center justify-center">
-      <div id={hostId} ref={hostRef} className="h-0 w-0 overflow-hidden" />
+      <YoutubePlayerHost id={hostId} hostRef={hostRef} />
 
       <IosUniformScaleShell layoutKey={layoutKey} outerBoxRef={iosShellOuterRef}>
         <div className="player-layout-ios__card relative w-full overflow-hidden rounded-[44px] ring-1 ring-white/10">

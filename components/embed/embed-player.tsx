@@ -91,6 +91,7 @@ export default function EmbedPlayer({
         width: "0",
         playerVars: {
           autoplay: autoplay ? 1 : 0,
+          mute: muted ? 1 : 0,
           controls: 0,
           modestbranding: 1,
           rel: 0,
@@ -272,8 +273,16 @@ export default function EmbedPlayer({
     const player = playerRef.current;
     if (!player) return;
     const state = player.getPlayerState?.();
-    if (state === 1) player.pauseVideo?.();
-    else player.playVideo?.();
+    if (state === 1) {
+      player.pauseVideo?.();
+      return;
+    }
+    // 중첩 iframe(노션 웹)에서는 음소거 후 playVideo가 성공하는 경우가 많음
+    if (!player.isMuted?.()) {
+      player.mute?.();
+      setIsMuted(true);
+    }
+    player.playVideo?.();
   }
 
   function toggleMute(): void {

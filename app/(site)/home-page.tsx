@@ -29,7 +29,7 @@ export default function HomePage({ requestOrigin }: HomePageProps) {
   const [input, setInput] = useState("");
   const [height, setHeight] = useState(480);
   const [autoplay, setAutoplay] = useState(true);
-  const [muted, setMuted] = useState(false);
+  const [muted, setMuted] = useState(true);
   const [embedUi, setEmbedUi] = useState<EmbedPlayerUi>("classic");
   const [playlistPanel, setPlaylistPanel] = useState(false);
   const [playlistSplitIframe, setPlaylistSplitIframe] = useState(false);

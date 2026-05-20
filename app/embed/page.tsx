@@ -30,7 +30,7 @@ export default async function EmbedPage({ searchParams }: EmbedPageProps) {
   const listInput = getSearchParam(sp, "list") ?? "";
   const vInput = getSearchParam(sp, "v") ?? "";
   const autoplay = parseBoolParam(getSearchParam(sp, "autoplay"), true);
-  const muted = parseBoolParam(getSearchParam(sp, "muted"), false);
+  const muted = parseBoolParam(getSearchParam(sp, "muted"), true);
   const embedUi = parseEmbedUiParam(getSearchParam(sp, "ui"));
   const showPlaylistPanelParam = parseBoolParam(
     getSearchParam(sp, "plist"),
