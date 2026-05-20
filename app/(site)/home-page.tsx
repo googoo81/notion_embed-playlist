@@ -16,18 +16,10 @@ import { HomeEmbedCard } from "@/components/home/home-embed-card";
 import { HomeHeader } from "@/components/home/home-header";
 import { HomePageShell } from "@/components/home/home-page-shell";
 import { HomePreviews } from "@/components/home/home-previews";
-
-const PRODUCTION_BASE_URL = "https://notion-embed-playlist.vercel.app";
-const DEVELOPMENT_BASE_URL = "http://localhost:3000";
-
-function getDefaultBaseUrl(): string {
-  return process.env.NODE_ENV === "development"
-    ? DEVELOPMENT_BASE_URL
-    : PRODUCTION_BASE_URL;
-}
+import { getDefaultAppUrl } from "@/lib/app-url";
 
 export default function HomePage() {
-  const [baseUrl, setBaseUrl] = useState(getDefaultBaseUrl);
+  const [baseUrl, setBaseUrl] = useState(getDefaultAppUrl);
   const [input, setInput] = useState("");
   const [height, setHeight] = useState(480);
   const [autoplay, setAutoplay] = useState(true);

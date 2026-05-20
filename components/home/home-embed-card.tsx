@@ -6,6 +6,7 @@ import { StatTile } from "@/components/ui/stat-tile";
 import { TextInput } from "@/components/ui/text-input";
 import { UrlDisplay } from "@/components/ui/url-display";
 import { NotionHintBanner } from "@/components/home/notion-hint-banner";
+import { getAppUrlPlaceholder } from "@/lib/app-url";
 import type { HomeEmbedCardProps } from "@/types/home-props";
 
 export function HomeEmbedCard({
@@ -45,7 +46,7 @@ export function HomeEmbedCard({
         <TextInput
           value={baseUrl}
           onChange={(e) => onBaseUrlChange(e.target.value)}
-          placeholder="예: https://notion-embed-playlist.vercel.app"
+          placeholder={getAppUrlPlaceholder()}
         />
       </div>
 
